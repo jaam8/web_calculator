@@ -1,4 +1,4 @@
-package main
+package calculator
 
 import (
 	"testing"
@@ -34,7 +34,7 @@ func TestCalc(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			val, err := Calc(testCase.expression)
+			val, err := Calculate(testCase.expression)
 			if err != nil {
 				t.Fatalf("successful case %s returns error", testCase.expression)
 			}
