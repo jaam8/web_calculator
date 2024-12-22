@@ -24,10 +24,8 @@ func convElem(expression string) ([]string, error) {
 			if strings.Contains(operators, string(value)) {
 				nums = append(nums, string(value))
 			} else if unicode.IsDigit(s) {
-				//return []string{}, errors.New("Неопознанный символ")
 				return []string{}, ErrInvalidExpression
 			} else if !unicode.IsDigit(s) {
-				//return []string{}, errors.New("Неопознанный символ")
 				return []string{}, ErrInvalidExpression
 			}
 		}
@@ -118,7 +116,6 @@ func Calculate(expression string) (float64, error) {
 			}
 			actions = actions[:len(actions)-1]
 		} else {
-			//return 0, fmt.Errorf("Неизвестный символ: %v", value)
 			return 0, ErrInvalidExpression
 		}
 		i += 1
@@ -127,7 +124,6 @@ func Calculate(expression string) (float64, error) {
 	for len(actions) > 0 {
 		lastAction := actions[len(actions)-1]
 		if lastAction == "(" {
-			//return 0, errors.New("Несоответствие скобок")
 			return 0, ErrInvalidExpression
 		}
 		if res := applyActions(); res != nil {
@@ -136,7 +132,6 @@ func Calculate(expression string) (float64, error) {
 	}
 
 	if len(nums) != 1 {
-		//return 0, errors.New("Неправильное выражение")
 		return 0, ErrInvalidExpression
 	}
 	return nums[0], nil
