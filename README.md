@@ -176,7 +176,7 @@ curl --location 'localhost:8080/internal/task' \
     - HTTP код: `200`
     - Тело ответа:
        ```json
-       "successfully written"
+       "task completed"
        ```
 
 2. Задача не найдена
