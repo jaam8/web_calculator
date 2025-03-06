@@ -65,7 +65,7 @@ func PostTaskHandler(c echo.Context) error {
 	switch ok {
 	case true:
 		taskManager.AddResult(result)
-		return c.JSON(http.StatusOK, result)
+		return c.JSON(http.StatusOK, "task completed")
 	case false:
 		return c.JSON(http.StatusNotFound, "task not found")
 	default:
