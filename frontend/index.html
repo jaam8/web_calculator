@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Веб Калькулятор</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <div class="calculator_container">
+        <h1>Распределенный Веб Калькулятор</h1>
+        <label for="expression">Введите арифметическое выражение:</label>
+        <input type="text" id="expression" placeholder="например: 2 + 2 * 2">
+        <div class="button-group">
+            <button id="themeToggle">Переключить тему</button>
+            <button id="calculateBtn">Вычислить</button>
+        </div>
+        <div id="result"></div>
+    </div>
+    <div class="expressions_container">
+        <h2>История вычислений</h2>
+        <!-- элементы создаются динамически -->
+        <ul id="historyList"></ul>
+    </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

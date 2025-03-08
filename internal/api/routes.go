@@ -14,6 +14,7 @@ func RunServer() {
 	e := echo.New()
 
 	e.Use(LogMiddleware)
+	e.Use(CORSMiddleware)
 
 	e.POST("/api/v1/calculate", CalculateHandler)
 	e.GET("/api/v1/expressions", ExpressionsHandler)

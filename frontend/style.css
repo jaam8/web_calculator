@@ -1,0 +1,238 @@
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 50px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    width: 85%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 20px;
+    background-color: transparent;
+    align-items: flex-start;
+}
+
+.calculator_container, .expressions_container {
+    min-width: 300px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 10px 0;
+    gap: 10px;
+}
+.button-group button {
+    width: auto;
+    margin: 0 5px;
+    min-width: max-content;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #45a049;
+}
+
+#themeToggle {
+    background-color: #2196F3;
+}
+#themeToggle:hover {
+    background-color: #1976D2;
+}
+
+input {
+    width: 40%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #e9e9e9;
+    color: #333;
+    text-align: center;
+}
+
+h1, h2 {
+    text-align: center;
+    font-size: 2em;
+    color: #444;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: #666;
+}
+
+#result {
+    display: none;
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px;
+    border: 2px solid #4CAF50;
+    border-radius: 4px;
+    background-color: #d0f0e0;
+    color: #00796b;
+}
+
+#historyList {
+    list-style: none;
+    padding: 0;
+    margin: 20px auto;
+    width: 70%;
+    max-width: 300px;
+    border-radius: 10px;
+    background: #ececec;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: #ddd;
+    color: #333;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.history-header-item {
+    font-weight: bold;
+    text-align: center;
+}
+.id-header {
+    width: 40%;
+}
+.info-header {
+    width: 60%;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+    margin: 10px auto;
+    padding: 5px 0;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.item-id {
+    width: 40%;
+    font-weight: bold;
+    color: #444;
+    text-align: center;
+}
+.item-info {
+    width: 60%;
+    text-align: start;
+}
+.item-info .status {
+    color: #1b8eff;
+    font-weight: bold;
+}
+.item-info .result {
+    color: #32c767;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.empty-message {
+    width: 90%;
+    margin: 10px auto;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+}
+
+/* Тёмная тема */
+body.dark-theme {
+    background-color: #2c2c2c;
+    color: white;
+}
+body.dark-theme .container {
+    background-color: transparent;
+    color: white;
+}
+body.dark-theme #result {
+    background-color: #004d40;
+    color: #e0f7fa;
+}
+body.dark-theme button {
+    background-color: #45a049;
+    color: white;
+}
+body.dark-theme button:hover {
+    background-color: #388e3c;
+}
+body.dark-theme input {
+    background-color: #333;
+    border: 1px solid #444;
+    color: white;
+}
+body.dark-theme input::placeholder {
+    color: #bbb;
+}
+body.dark-theme h1,
+body.dark-theme h2 {
+    color: #c2c2c2;
+}
+body.dark-theme #historyList {
+    background: #333;
+}
+body.dark-theme .history-header {
+    background-color: #444;
+    color: white;
+}
+body.dark-theme .history-item {
+    background-color: #444;
+    color: white;
+    box-shadow: none;
+}
+body.dark-theme .item-id {
+    color: white;
+}
+body.dark-theme .item-info .status {
+    color: #ff52a2;
+}
+body.dark-theme .item-info .result {
+    color: #32c767;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .calculator_container, .expressions_container {
+        width: 90%;
+    }
+}
