@@ -17,12 +17,12 @@
 ```mermaid
 graph LR
    classDef elem stroke-width:0px;
-   C(client):::elem -->|POST\n api/v1/calculate| O([orchestrator]):::elem
-   C -->|GET\n api/v1/expressions| O
-   C -->|GET\n api/v1/expressions/:id| O
-   O <-->|"POST | GET\n" /internal/task| A1[agent 1]:::elem
-   O <-->|"POST | GET\n" /internal/task| A2[agent 2]:::elem
-   O <-->|"POST | GET\n" /internal/task| A3[agent n]:::elem
+   C(client):::elem -->|POST api/v1/calculate| O([orchestrator]):::elem
+   C -->|GET api/v1/expressions| O
+   C -->|"GET api/v1/expressions/:id "| O
+   O <-->|"POST | GET<br>" /internal/task| A1[agent 1]:::elem
+   O <-->|"POST | GET<br>" /internal/task| A2[agent 2]:::elem
+   O <-->|"POST | GET<br>" /internal/task| A3[agent n]:::elem
 ```
 
 ## Веб-интерфейс
