@@ -1,6 +1,8 @@
 # Распределенный веб-сервис для вычисления арифметических выражений c веб-интерфейсом
 
 ## Описание
+
+---
 Этот проект реализует веб-сервис, который распределенно вычисляет арифметические выражения, переданные пользователем через HTTP-запрос.
 Сервис поддерживает:
 
@@ -13,17 +15,81 @@
 
 ---
 ```mermaid
-graph TD
-    U[client] -->|POST /calculate| O[orchestrator]
-    U -->|GET /expressions| O
-    U -->|GET /expressions/:id| O
-    O -->|GET /internal/task| A1[agent 1]
-    O -->|GET /internal/task| A2[agent 2]
-    O -->|GET /internal/task| A3[agent n]
-    A1 -->|POST /internal/task| O
-    A2 -->|POST /internal/task| O
-    A3 -->|POST /internal/task| O
+graph LR
+   classDef elem stroke-width:0px;
+   C(client):::elem -->|POST\n api/v1/calculate| O([orchestrator]):::elem
+   C -->|GET\n api/v1/expressions| O
+   C -->|GET\n api/v1/expressions/:id| O
+   O <-->|"POST | GET\n" /internal/task| A1[agent 1]:::elem
+   O <-->|"POST | GET\n" /internal/task| A2[agent 2]:::elem
+   O <-->|"POST | GET\n" /internal/task| A3[agent n]:::elem
 ```
+
+## Веб-интерфейс
+
+---
+<details>
+    <summary>Нажми, чтобы увидеть темную тему</summary>
+
+   ![dark_theme_empty.png](img/dark_theme_empty.png)
+   ![dark_theme_with_data.png](img/dark_theme_with_data.png)
+</details>
+<details>
+  <summary>Нажми, чтобы увидеть светлую тему</summary>
+
+  ![light_theme_empty.png](img/light_theme_empty.png)
+  ![img/light_theme_with_data.png](img/light_theme_with_data.png)
+</details>
+
+## Установка и запуск
+
+---
+### 1. Склонируйте репозиторий:
+```bash
+git clone https://github.com/jaam8/web_calculator.git
+cd web_calculator
+```
+### 2. Установите зависимости:
+```bash
+go mod tidy
+```
+
+### 3. Cкопируйте и по желанию измените файл `.env`:
+**в `.env.example` уже указаны значения по умолчанию**
+```bash
+cp .env.example .env
+```
+Значение переменных среды:
+```dotenv
+REQUEST_URL=<url для запроса агента>
+PORT=<порт для запуска сервиса>
+TIME_ADDITION_MS=<время выполнения сложения в миллисекундах>
+TIME_SUBTRACTION_MS=<время выполнения вычитания в миллисекундах>
+TIME_MULTIPLICATIONS_MS=<время выполнения умножения в миллисекундах>
+TIME_DIVISIONS_MS=<время выполнения деления в миллисекундах>
+COMPUTING_POWER=<колличество агентов (горутин)>
+WAIT_TIME_SECONDS=<время между запросов агента>
+```
+
+### 4. Запустите проект с помощью команды:
+- Запуск оркестратора и агента:
+    ```bash
+    go run ./cmd/main.go
+    ```
+- Запуск фронтенда:
+   ```bash
+  go run ./frontend/main.go
+  ```
+- Запуск только оркестратора:
+    ```bash
+    go run ./cmd/orchestrator/main.go
+    ```
+- Запуск только агента:
+    ```bash
+    go run ./cmd/agent/main.go
+    ```
+
+### 5. Фронтенд будет доступен по адресу: [http://localhost:8081](http://localhost:8081)
 
 ## Примеры и эндпоинты
 
@@ -200,57 +266,10 @@ curl --location 'localhost:8080/internal/task' \
       "internal server error"
       ```
 
-## Установка и запуск
-
-### 1. Склонируйте репозиторий:
-```bash
-git clone https://github.com/jaam8/web_calculator.git
-cd web_calculator
-```
-### 2. Установите зависимости:
-```bash
-go mod tidy
-```
-
-### 3. Cкопируйте и по желанию измените файл `.env`:
-**в `.env.example` уже указаны значения по умолчанию**
-```bash
-cp .env.example .env
-```
-Значение переменных среды:
-```dotenv
-REQUEST_URL=<url для запроса агента>
-PORT=<порт для запуска сервиса>
-TIME_ADDITION_MS=<время выполнения сложения в миллисекундах>
-TIME_SUBTRACTION_MS=<время выполнения вычитания в миллисекундах>
-TIME_MULTIPLICATIONS_MS=<время выполнения умножения в миллисекундах>
-TIME_DIVISIONS_MS=<время выполнения деления в миллисекундах>
-COMPUTING_POWER=<колличество агентов (горутин)>
-WAIT_TIME_SECONDS=<время между запросов агента>
-```
-
-### 4. Запустите проект с помощью команды:
-- Запуск оркестратора и агента:
-    ```bash
-    go run ./cmd/main.go
-    ```
-- Запуск фронтенда:
-   ```bash
-  go run ./frontend/main.go
-  ```
-- Запуск только оркестратора:
-    ```bash
-    go run ./cmd/orchestrator/main.go
-    ```
-- Запуск только агента:
-    ```bash
-    go run ./cmd/agent/main.go
-    ```
-
-[//]: # (3. Сервис будет доступен по адресу: [http://localhost:8080/api/v1/calculate]&#40;http://localhost:8080/api/v1/calculate&#41;)
 
 ## Тестирование
 
+---
 Для запуска тестов выполните:
 ```bash
 go test ./...
