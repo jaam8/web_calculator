@@ -6,7 +6,8 @@ import (
 )
 
 type Task struct {
-	ID            int           `json:"id"`
+	ExpressionID  int
+	TaskID        int           `json:"id"`
 	Arg1          float64       `json:"arg1"`
 	Arg2          float64       `json:"arg2"`
 	Operation     string        `json:"operation"`
@@ -14,72 +15,48 @@ type Task struct {
 }
 
 type Result struct {
-	ID     int     `json:"id"`
-	Result float64 `json:"result"`
+	ExpressionID int
+	TaskID       int     `json:"id"`
+	Result       float64 `json:"result"`
 }
 
 type TaskManager struct {
-	mu          sync.Mutex
-	tasks       map[int]Task
-	taskQueues  chan Task
-	resultQueue chan Result
-	Counter     int
+	mu       sync.Mutex
+	resultCh chan Result
+	Counter  int
 }
 
+// NewTaskManager Создаёт новый экземпляр TaskManager
 func NewTaskManager() *TaskManager {
 	return &TaskManager{
-		tasks:       make(map[int]Task),
-		taskQueues:  make(chan Task, 10),
-		resultQueue: make(chan Result, 10),
+		resultCh: make(chan Result, 1),
 	}
 }
 
-func (tm *TaskManager) CreateTask(arg1, arg2 float64, oper string) Task {
+// CreateTask Создаёт новую задачу
+func (tm *TaskManager) CreateTask(arg1, arg2 float64, oper string, ExprID int) Task {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 	tm.Counter++
 	taskID := tm.Counter
 	operationTime := conf.GetOperationsTime(oper)
 	task := Task{
-		ID:            taskID,
+		ExpressionID:  ExprID,
+		TaskID:        taskID,
 		Arg1:          arg1,
 		Arg2:          arg2,
 		Operation:     oper,
 		OperationTime: operationTime,
 	}
-	tm.tasks[taskID] = task
 	return task
 }
 
-func (tm *TaskManager) AddTask(task Task) {
-	tm.taskQueues <- task
-
-}
-
-func (tm *TaskManager) GetTask(taskID int) (Task, bool) {
-	tm.mu.Lock()
-	defer tm.mu.Unlock()
-	task, exists := tm.tasks[taskID]
-	return task, exists
-
-}
-
-func (tm *TaskManager) GetTasksChan() chan Task {
-	return tm.taskQueues
-}
-
+// AddResult Добавляет результат в канал
 func (tm *TaskManager) AddResult(result Result) {
-	tm.resultQueue <- result
+	tm.resultCh <- result
 }
 
+// GetResult Возвращает результат из канала
 func (tm *TaskManager) GetResult() Result {
-	return <-tm.resultQueue
-}
-
-func (tm *TaskManager) RemoveTask(taskID int) bool {
-	tm.mu.Lock()
-	defer tm.mu.Unlock()
-	delete(tm.tasks, taskID)
-	_, exists := tm.tasks[taskID]
-	return exists
+	return <-tm.resultCh
 }

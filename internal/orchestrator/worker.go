@@ -9,7 +9,6 @@ var conf = config.Configs
 
 func Process(rpn []string, tm *TaskManager, em *ExpressionManager, expressionID int) {
 	var stack []float64
-
 	for _, v := range rpn {
 		if num, err := strconv.ParseFloat(v, 64); err == nil {
 			stack = append(stack, num)
@@ -23,8 +22,8 @@ func Process(rpn []string, tm *TaskManager, em *ExpressionManager, expressionID 
 		arg1 := stack[len(stack)-2]
 		stack = stack[:len(stack)-2]
 
-		task := tm.CreateTask(arg1, arg2, v)
-		tm.AddTask(task)
+		task := tm.CreateTask(arg1, arg2, v, expressionID)
+		em.AddTask(task)
 		result := tm.GetResult()
 		stack = append(stack, result.Result)
 	}

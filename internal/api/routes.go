@@ -7,7 +7,6 @@ import (
 )
 
 var expressionManager = o.NewExpressionManager()
-var taskManager = o.NewTaskManager()
 var conf = config.Configs
 
 func RunServer() {

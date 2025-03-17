@@ -19,7 +19,7 @@ func CORSMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		// Для всех остальных запросов передаем обработку дальше
+		// Для всех остальных запросов идем дальше
 		return next(c)
 	}
 }
@@ -29,16 +29,12 @@ func LogMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		log := logger.Log
 
-		// Логируем входящий запрос
 		log.Info("Request",
 			zap.String("method", c.Request().Method),
 			zap.String("path", c.Request().URL.Path),
 		)
-
-		// Выполняем следующий обработчик
 		err := next(c)
 
-		// Логируем статусный код ответа
 		log.Info("Response",
 			zap.Int("status", c.Response().Status),
 			zap.String("method", c.Request().Method),

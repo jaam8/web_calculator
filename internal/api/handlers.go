@@ -24,15 +24,17 @@ func CalculateHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "cannot create expression")
 	}
+	taskManager, exists := expressionManager.GetTaskManager(expressionID)
+	if !exists {
+		return c.JSON(http.StatusInternalServerError, "cannot get task manager")
+	}
 	go o.Process(rpn, taskManager, expressionManager, expressionID)
-	c.Set("expressionID", expressionID)
 	return c.JSON(http.StatusCreated, map[string]int{"id": expressionID})
 }
 
 func ExpressionsHandler(c echo.Context) error {
 	expressions := expressionManager.GetExpressions()
 	return c.JSON(http.StatusOK, map[string][]*o.Expression{"expressions": expressions})
-	//return c.JSON(http.StatusOK, map[string]map[int]*o.Expression{"expressions": expressions})
 }
 
 func ExpressionByIDHandler(c echo.Context) error {
@@ -56,12 +58,7 @@ func PostTaskHandler(c echo.Context) error {
 	if err := c.Bind(&result); err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, "cannot parse request")
 	}
-	taskID := result.ID
-	_, ok := taskManager.GetTask(taskID)
-	err := taskManager.RemoveTask(taskID)
-	if err {
-		return c.JSON(http.StatusInternalServerError, "cannot remove task")
-	}
+	taskManager, ok := expressionManager.GetTaskManager(result.ExpressionID)
 	switch ok {
 	case true:
 		taskManager.AddResult(result)
@@ -75,8 +72,8 @@ func PostTaskHandler(c echo.Context) error {
 
 func GetTaskHandler(c echo.Context) error {
 	select {
-	case task := <-taskManager.GetTasksChan():
-		if task.ID != 0 {
+	case task := <-expressionManager.GetTasks():
+		if task.TaskID != 0 {
 			return c.JSON(http.StatusOK, task)
 		}
 	default:

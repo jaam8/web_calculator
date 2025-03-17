@@ -24,8 +24,8 @@ func TestProcess_ValidExpression(t *testing.T) {
 	expressionID, _ := em.CreateExpression()
 
 	go func() {
-		for task := range tm.GetTasksChan() {
-			result := Result{ID: task.ID, Result: DoTask(task)}
+		for task := range em.GetTasks() {
+			result := Result{TaskID: task.TaskID, Result: DoTask(task)}
 			tm.AddResult(result)
 		}
 	}()
@@ -35,13 +35,13 @@ func TestProcess_ValidExpression(t *testing.T) {
 
 	expr, exists := em.GetExpression(expressionID)
 	if !exists {
-		t.Fatalf("Expression with ID %d does not exist", expressionID)
+		t.Fatalf("Expression with TaskID %d does not exist", expressionID)
 	}
 	if expr.Status != "done" {
 		t.Errorf("Expected status 'done', got %s", expr.Status)
 	}
-	if expr.Result != 1 {
-		t.Errorf("Expected result 1, got %f", expr.Result)
+	if *expr.Result != 1 {
+		t.Errorf("Expected result 1, got %f", *expr.Result)
 	}
 }
 
@@ -51,8 +51,8 @@ func TestProcess_EmptyExpression(t *testing.T) {
 	expressionID, _ := em.CreateExpression()
 
 	go func() {
-		for task := range tm.GetTasksChan() {
-			result := Result{ID: task.ID, Result: DoTask(task)}
+		for task := range em.GetTasks() {
+			result := Result{TaskID: task.TaskID, Result: DoTask(task)}
 			tm.AddResult(result)
 		}
 	}()
@@ -62,12 +62,12 @@ func TestProcess_EmptyExpression(t *testing.T) {
 
 	expr, exists := em.GetExpression(expressionID)
 	if !exists {
-		t.Fatalf("Expression with ID %d does not exist", expressionID)
+		t.Fatalf("Expression with TaskID %d does not exist", expressionID)
 	}
 	if expr.Status != "invalid expression" {
 		t.Errorf("Expected status 'invalid expression', got %s", expr.Status)
 	}
-	if expr.Result != 0 {
-		t.Errorf("Expected result 0, got %f", expr.Result)
+	if expr.Result != nil {
+		t.Errorf("Expected result to be nil, got %f", *expr.Result)
 	}
 }

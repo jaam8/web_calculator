@@ -76,8 +76,8 @@ func TestExpressionByIDHandler(t *testing.T) {
 }
 
 func TestPostTaskHandler(t *testing.T) {
-	task := orchestrator.Task{ID: 1, Arg1: 3, Arg2: 4, Operation: "+"}
-	taskManager.AddTask(task)
+	task := orchestrator.Task{TaskID: 1, Arg1: 3, Arg2: 4, Operation: "+"}
+	expressionManager.AddTask(task)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/internal/task", strings.NewReader(`{"id":1,"result":7}`))
@@ -100,8 +100,8 @@ func TestPostTaskHandler(t *testing.T) {
 }
 
 func TestGetTaskHandler(t *testing.T) {
-	task := orchestrator.Task{ID: 1, Arg1: 3, Arg2: 4, Operation: "+"}
-	taskManager.AddTask(task)
+	task := orchestrator.Task{TaskID: 1, Arg1: 3, Arg2: 4, Operation: "+"}
+	expressionManager.AddTask(task)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/internal/task", nil)
