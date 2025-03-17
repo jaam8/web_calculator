@@ -54,9 +54,9 @@ func NewConfig() *Config {
 	if requestURL == "" {
 		requestURL = "http://localhost:8080"
 	}
-	waitTime, _ := strconv.Atoi(os.Getenv("WAIT_TIME_SECONDS"))
+	waitTime, _ := strconv.Atoi(os.Getenv("WAIT_TIME_MS"))
 	if waitTime == 0 {
-		waitTime = 5
+		waitTime = 100
 	}
 	log.Println("Successfully loaded .env file")
 	return &Config{
