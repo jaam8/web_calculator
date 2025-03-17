@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// DoTask вычисляет задачу
 func DoTask(task o.Task) float64 {
 	switch task.Operation {
 	case "+":
@@ -33,29 +34,31 @@ func DoTask(task o.Task) float64 {
 	}
 }
 
+// GetTask делает запрос к оркестратору и возвращает задачу
 func GetTask() (o.Task, int, error) {
 	url := fmt.Sprintf("%s:%s/internal/task", conf.RequestURL, conf.Port)
 	resp, err := http.Get(url)
 	if err != nil {
-		return o.Task{ID: 0}, 0, err
+		return o.Task{TaskID: 0}, 0, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return o.Task{ID: 0}, resp.StatusCode, err
+		return o.Task{TaskID: 0}, resp.StatusCode, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return o.Task{ID: 0}, resp.StatusCode, errors.New("task not found")
+		return o.Task{TaskID: 0}, resp.StatusCode, errors.New("task not found")
 	}
 	var task o.Task
 	err = json.Unmarshal(body, &task)
 	if err != nil {
-		return o.Task{ID: 0}, resp.StatusCode, err
+		return o.Task{TaskID: 0}, resp.StatusCode, err
 	}
 	return task, resp.StatusCode, nil
 }
 
+// PostResult отправляет результат вычисления оркестратору
 func PostResult(result o.Result) error {
 	resultData, err := json.Marshal(result)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 
 var conf = config.Configs
 
+// Run запускает агентов, является точкой входа для агентов
 func Run() {
 	computingPower := conf.ComputingPower
 
@@ -19,15 +20,16 @@ func Run() {
 		wg.Add(1)
 		log.Println("AGENT Starting worker ", i)
 		go func() {
-			defer wg.Done() // Уменьшаем счётчик при завершении
+			defer wg.Done()
 			Work()
 		}()
 	}
 	wg.Wait()
 }
 
+// Work делает постоянные запросы к оркестратору
 func Work() {
-	sleepTime := time.Duration(conf.WaitTime) * time.Second
+	sleepTime := time.Duration(conf.WaitTime) * time.Millisecond
 	for {
 		task, status, err := GetTask()
 		for status != 200 {
@@ -44,15 +46,16 @@ func Work() {
 		result := DoTask(task)
 
 		Result := o.Result{
-			ID:     task.ID,
-			Result: result,
+			ExpressionID: task.ExpressionID,
+			TaskID:       task.TaskID,
+			Result:       result,
 		}
 
 		err = PostResult(Result)
 		if err != nil {
 			log.Println("Error posting result:", err)
 		}
-		log.Printf("Task ID: %d processed, result: %f\n", task.ID, result)
+		log.Printf("Task TaskID: %d processed, result: %f\n", task.TaskID, result)
 		time.Sleep(sleepTime)
 	}
 }
