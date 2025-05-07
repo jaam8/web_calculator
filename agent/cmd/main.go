@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jaam8/web_calculator/internal/agent"
+	"github.com/jaam8/web_calculator/agent"
 )
 
 func main() {

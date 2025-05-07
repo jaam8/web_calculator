@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	o "github.com/jaam8/web_calculator/internal/orchestrator"
+	o "github.com/jaam8/web_calculator/orchestrator"
 	"io"
 	"net/http"
 	"strings"

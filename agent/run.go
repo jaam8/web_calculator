@@ -2,7 +2,7 @@ package agent
 
 import (
 	"github.com/jaam8/web_calculator/internal/config"
-	o "github.com/jaam8/web_calculator/internal/orchestrator"
+	o "github.com/jaam8/web_calculator/orchestrator"
 	"log"
 	"sync"
 	"time"

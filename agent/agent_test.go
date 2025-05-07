@@ -3,7 +3,7 @@ package agent
 import (
 	"bytes"
 	"github.com/jaam8/web_calculator/internal/config"
-	"github.com/jaam8/web_calculator/internal/orchestrator"
+	"github.com/jaam8/web_calculator/orchestrator"
 	"io"
 	"net/http"
 	"net/http/httptest"
