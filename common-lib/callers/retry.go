@@ -3,10 +3,10 @@ package callers
 import (
 	"context"
 	"fmt"
+	"github.com/jaam8/web_calculator/common-lib/logger"
 	"go.uber.org/zap"
 	"math"
 	"time"
-	"xlink/common/logger"
 )
 
 // Retry calls a function at most `maxRetries` times, increasing the delay (baseDelay * 2^n for each try)

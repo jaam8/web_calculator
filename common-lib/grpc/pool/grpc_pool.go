@@ -3,13 +3,13 @@ package pool
 import (
 	"context"
 	"fmt"
+	"github.com/jaam8/web_calculator/common-lib/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"slices"
 	"sync"
 	"time"
-	"xlink/common/logger"
 )
 
 type GrpcPool struct {

@@ -3,10 +3,10 @@ package interceptors
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/jaam8/web_calculator/common-lib/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"time"
-	"xlink/common/logger"
 )
 
 func AddLogMiddleware(
