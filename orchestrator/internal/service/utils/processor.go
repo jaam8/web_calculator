@@ -1,13 +1,11 @@
-package orchestrator
+package utils
 
 import (
-	"github.com/jaam8/web_calculator/internal/config"
+	"github.com/jaam8/web_calculator/orchestrator/internal/service/types"
 	"strconv"
 )
 
-var conf = config.Configs
-
-func Process(rpn []string, tm *TaskManager, em *ExpressionManager, expressionID int) {
+func Process(rpn []string, tm types.TaskManager, em types.ExpressionManager, expressionID int) {
 	var stack []float64
 	for _, v := range rpn {
 		if num, err := strconv.ParseFloat(v, 64); err == nil {
@@ -33,5 +31,4 @@ func Process(rpn []string, tm *TaskManager, em *ExpressionManager, expressionID 
 		return
 	}
 	em.ExpressionDone(expressionID, stack[0])
-	return
 }
