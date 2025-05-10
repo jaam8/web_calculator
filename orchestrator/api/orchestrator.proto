@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+option go_package = "common-lib/gen/orchestrator";
+
+package api;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+
+service OrchestratorService {
+  rpc Calculate(CalculateRequest) returns (CalculateResponse);
+  rpc GetTask(google.protobuf.Empty) returns (GetTaskResponse);
+  rpc ResultTask(ResultTaskRequest) returns (ResultTaskResponse);
+  rpc Expressions(ExpressionsRequest) returns (ExpressionsResponse);
+  rpc ExpressionById(ExpressionByIdRequest) returns (ExpressionByIdResponse);
+}
+
+//--------------------------- Calculate ---------------------------
+message CalculateRequest {
+  string expression = 1;
+}
+
+message CalculateResponse {
+  int64 id = 1;
+}
+
+// --------------------------- Expression ------------------------
+message Expression {
+  int64 id = 1;
+  string status = 2;
+  //  pending, done
+  optional double result = 3;
+}
+
+//--------------------------- Expressions ---------------------------
+message ExpressionsRequest {
+  int64 id = 1;
+}
+
+message ExpressionsResponse {
+  repeated Expression expressions = 1;
+}
+
+// --------------------------- ExpressionById ---------------------------
+message ExpressionByIdRequest {
+  int64 id = 1;
+}
+
+message ExpressionByIdResponse {
+  Expression expression = 1;
+}
+
+//--------------------------- Task ------------------------------
+message Task {
+  int64 expression_id = 1;
+  int64 id = 2;
+  double arg1 = 3;
+  double arg2 = 4;
+  string operation = 5;
+  google.protobuf.Duration operation_time = 6;
+}
+
+//--------------------------- GetTask ---------------------------
+message GetTaskResponse {
+  Task task = 1;
+}
+
+//--------------------------- ResultTask ---------------------------
+message ResultTaskRequest {
+  int64 expression_id = 1;
+  int64 id = 2;
+  double result = 3;
+}
+
+message ResultTaskResponse {
+  string status = 1;
+}
