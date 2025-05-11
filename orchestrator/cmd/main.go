@@ -6,7 +6,6 @@ import (
 	"github.com/jaam8/web_calculator/orchestrator/internal/config"
 	"github.com/jaam8/web_calculator/orchestrator/internal/server"
 	"github.com/jaam8/web_calculator/orchestrator/internal/service/utils"
-	"go.uber.org/zap"
 	"log"
 	"os"
 	"os/signal"
@@ -15,13 +14,14 @@ import (
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	ctx, _ = logger.New(ctx)
 
 	cfg, err := config.New()
 	if err != nil {
-		logger.GetLoggerFromCtx(ctx).Fatal(ctx,
-			"failed to load config", zap.Error(err))
+		log.Fatalf("failed to load config: %v", err)
 	}
+
+	ctx = context.WithValue(ctx, "log_level", cfg.LogLevel)
+	ctx, _ = logger.New(ctx)
 
 	orchestratorCfg := cfg.Orchestrator
 
