@@ -18,8 +18,9 @@ type OrchestratorConfig struct {
 }
 
 type Config struct {
-	Orchestrator OrchestratorConfig `yaml:"orchestrator" env-prefix:"ORCHESTRATOR"`
-	Postgres     postgres.Config    `yaml:"postgres" env-prefix:"POSTGRES"`
+	Orchestrator OrchestratorConfig `yaml:"orchestrator" env-prefix:"ORCHESTRATOR_"`
+	Postgres     postgres.Config    `yaml:"postgres" env-prefix:"POSTGRES_"`
+	LogLevel     string             `yaml:"log_level" env:"LOG_LEVEL" env-default:"info"`
 }
 
 func New() (Config, error) {
