@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"github.com/jaam8/web_calculator/agent/internal/models"
 	"github.com/jaam8/web_calculator/agent/internal/ports"
 	errs "github.com/jaam8/web_calculator/common-lib/errors"
-	"log"
+	"github.com/jaam8/web_calculator/common-lib/logger"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -20,33 +22,67 @@ func NewAgentService(orchestratorAdapter ports.OrchestratorAdapter) *AgentServic
 }
 
 // Work делает постоянные запросы к оркестратору
-func (s *AgentService) Work(waitTime int) {
+func (s *AgentService) Work(ctx context.Context, waitTime int) {
 	sleepTime := time.Duration(waitTime) * time.Millisecond
 	for {
 		task, err := s.GetTask()
-		for err != nil {
-			if errors.Is(err, errs.ErrTaskNotFound) {
-				log.Println("Task not found:", err)
+		for err != nil || task.TaskID == 0 {
+			switch {
+			case errors.As(err, &errs.ErrTaskNotFound):
+				logger.GetLoggerFromCtx(ctx).Warn(ctx,
+					"Task not found",
+					zap.Error(err))
 				time.Sleep(sleepTime)
-			}
-			if errors.Is(err, errs.ErrInternalServerError) {
-				log.Println("Internal server error:", err)
+			case errors.As(err, &errs.ErrInternalServerError):
+				logger.GetLoggerFromCtx(ctx).Error(ctx,
+					"Internal server error",
+					zap.Int("task_id", task.TaskID),
+					zap.Error(err))
 				time.Sleep(sleepTime)
+			default:
+				logger.GetLoggerFromCtx(ctx).Error(ctx,
+					"Unknown error",
+					zap.Int("task_id", task.TaskID),
+					zap.Error(err),
+				)
 			}
 			task, err = s.GetTask()
 		}
+
+		logger.GetLoggerFromCtx(ctx).Debug(ctx,
+			"GOT TASK",
+			zap.Int("expression_id", task.ExpressionID),
+			zap.Int("task_id", task.TaskID),
+			zap.String("operation", task.Operation),
+			zap.Float64("arg1", task.Arg1),
+			zap.Float64("arg2", task.Arg2),
+			zap.Duration("operation_time", task.OperationTime),
+		)
+
 		result, err := DoTask(task)
 		if err != nil {
-			log.Println("Error calculating task:", err)
-			if errors.Is(err, errs.ErrDivideByZero) {
-				log.Println("Division by zero error:", err)
+			switch {
+			case errors.As(err, &errs.ErrDivideByZero):
+				logger.GetLoggerFromCtx(ctx).Error(ctx,
+					"Division by zero error",
+					zap.Int("task_id", task.TaskID),
+					zap.Error(err),
+				)
+				continue
+			case errors.As(err, &errs.ErrInvalidExpression):
+				logger.GetLoggerFromCtx(ctx).Error(ctx,
+					"Invalid expression error",
+					zap.Int("task_id", task.TaskID),
+					zap.Error(err))
+				continue
+			default:
+				logger.GetLoggerFromCtx(ctx).Error(ctx,
+					"Unknown error",
+					zap.Int("task_id", task.TaskID),
+					zap.Error(err),
+				)
 				continue
 			}
-			if errors.Is(err, errs.ErrInvalidExpression) {
-				log.Println("Invalid expression error:", err)
-				continue
-			}
-
 		}
 
 		Result := models.Result{
@@ -55,11 +91,21 @@ func (s *AgentService) Work(waitTime int) {
 			Result:       result,
 		}
 
-		err = s.PostResult(Result)
+		err = s.ResultTask(Result)
 		if err != nil {
-			log.Println("Error posting result:", err)
+			logger.GetLoggerFromCtx(ctx).Error(ctx,
+				"Error send result for task",
+				zap.Int("expression_id", Result.ExpressionID),
+				zap.Int("task_id", Result.TaskID),
+				zap.Float64("result", Result.Result),
+				zap.Error(err))
 		}
-		log.Printf("Task TaskID: %d processed, result: %f\n", task.TaskID, result)
+		logger.GetLoggerFromCtx(ctx).Info(ctx,
+			"Send result for task",
+			zap.Int("expression_id", Result.ExpressionID),
+			zap.Int("task_id", Result.TaskID),
+			zap.Float64("result", Result.Result),
+		)
 		time.Sleep(sleepTime)
 	}
 }
@@ -91,7 +137,7 @@ func DoTask(task models.Task) (float64, error) {
 func (s *AgentService) GetTask() (models.Task, error) {
 	task, err := s.orchestratorAdapter.GetTask()
 	if err != nil {
-		if errors.Is(err, errs.ErrTaskNotFound) {
+		if errors.As(err, &errs.ErrTaskNotFound) {
 			return models.Task{TaskID: 0}, err
 		}
 		return models.Task{}, err
@@ -99,11 +145,11 @@ func (s *AgentService) GetTask() (models.Task, error) {
 	return task, nil
 }
 
-// PostResult отправляет результат вычисления оркестратору
-func (s *AgentService) PostResult(result models.Result) error {
+// ResultTask отправляет результат вычисления оркестратору
+func (s *AgentService) ResultTask(result models.Result) error {
 	_, err := s.orchestratorAdapter.ResultTask(result.ExpressionID, result.TaskID, result.Result)
 	if err != nil {
-		if errors.Is(err, errs.ErrTaskNotFound) {
+		if errors.As(err, &errs.ErrTaskNotFound) {
 			return err
 		}
 		return err
