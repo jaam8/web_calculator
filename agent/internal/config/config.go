@@ -9,6 +9,9 @@ type OrchestratorConfig struct {
 	Host string `yaml:"host" env:"HOST" env-default:"localhost"`
 	Port int    `yaml:"port" env:"PORT" env-default:"50052"`
 
+	UpstreamName string `yaml:"upstream_name" env:"UPSTREAM_NAME" env-default:"orchestrator"`
+	UpstreamPort int    `yaml:"upstream_port" env:"UPSTREAM_PORT" env-default:"50052"`
+
 	Timeout        int  `yaml:"timeout" env:"TIMEOUT_MS" env-default:"500"`
 	MaxRetries     uint `yaml:"max_retries" env:"MAX_RETRIES" env-default:"3"`
 	BaseRetryDelay int  `yaml:"base_retry_delay" env:"BASE_RETRY_DELAY" env-default:"100"`
@@ -16,15 +19,16 @@ type OrchestratorConfig struct {
 
 type AgentConfig struct {
 	Host string `yaml:"host" env:"HOST" env-default:"localhost"`
-	Port int    `yaml:"port" env:"PORT" env-default:"50051"`
+	Port int    `yaml:"port" env:"PORT" env-default:"50053"`
 
 	ComputingPower int `yaml:"computing_power" env:"COMPUTING_POWER" env-default:"5"`
 	WaitTime       int `yaml:"wait_time" env:"WAIT_TIME_MS" env-default:"500"`
 }
 
 type Config struct {
-	Orchestrator OrchestratorConfig `yaml:"orchestrator" env-prefix:"ORCHESTRATOR"`
-	Agent        AgentConfig        `yaml:"agent" env-prefix:"AGENT"`
+	Orchestrator OrchestratorConfig `yaml:"orchestrator" env-prefix:"ORCHESTRATOR_"`
+	Agent        AgentConfig        `yaml:"agent" env-prefix:"AGENT_"`
+	LogLevel     string             `yaml:"log_level" env:"LOG_LEVEL" env-default:"info"`
 }
 
 func New() (Config, error) {
