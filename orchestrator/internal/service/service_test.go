@@ -157,7 +157,7 @@ func TestExpressionByID(t *testing.T) {
 			tt.mockSetup(exprManager)
 			service := NewOrchestratorService(exprManager)
 
-			_, err := service.ExpressionByID(
+			_, err := service.ExpressionById(
 				context.Background(),
 				&orchestrator.ExpressionByIdRequest{
 					Id: int64(tt.inputID),
