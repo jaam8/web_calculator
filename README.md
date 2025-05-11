@@ -1,5 +1,8 @@
 # Распределенный веб-сервис для вычисления арифметических выражений c веб-интерфейсом
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/jaam8/web_calculator)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jaam8/web_calculator)](https://goreportcard.com/report/github.com/jaam8/web_calculator)
+[![wakatime](https://wakatime.com/badge/user/018badf6-44ca-4a0f-82e9-9b27db08764a/project/2fbf499e-2c9f-47af-aa8f-c602090518fe.svg)](https://wakatime.com/badge/user/018badf6-44ca-4a0f-82e9-9b27db08764a/project/2fbf499e-2c9f-47af-aa8f-c602090518fe)
 ## Описание
 
 ---
