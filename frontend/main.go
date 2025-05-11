@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	http.Handle("/", http.FileServer(http.Dir("./frontend")))
+	http.Handle("/", http.FileServer(http.Dir("../static")))
 
 	port := ":8081"
 	fmt.Println("Frontend server running on http://localhost" + port)
