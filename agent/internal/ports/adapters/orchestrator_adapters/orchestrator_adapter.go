@@ -47,8 +47,8 @@ func (o *OrchestratorAdapter) GetGRPCClient() (*grpc.ClientConn, *orchestrator.O
 	return grpcConn, &client, nil
 }
 
-func (s *OrchestratorAdapter) GetTask() (models.Task, error) {
-	conn, clientPointer, err := s.GetGRPCClient()
+func (o *OrchestratorAdapter) GetTask() (models.Task, error) {
+	conn, clientPointer, err := o.GetGRPCClient()
 	if err != nil {
 		return models.Task{}, fmt.Errorf("cannot connect to orchestrator by gRPC: %v", err)
 	}
@@ -57,14 +57,14 @@ func (s *OrchestratorAdapter) GetTask() (models.Task, error) {
 
 	resultChan := make(chan *orchestrator.Task, 1)
 
-	err = callers.Retry(func() error {
+	err = callers.Timeout(func() error {
 		response, grpcErr := (*clientPointer).GetTask(context.Background(), &emptypb.Empty{})
 		if grpcErr != nil {
 			return fmt.Errorf("error in timeout gRPC caller: %v", grpcErr)
 		}
 		resultChan <- response.GetTask()
 		return nil
-	}, s.MaxRetries, s.BaseRetryDelay)
+	}, o.Timeout)
 
 	if err != nil {
 		log.Printf("error in timeout gRPC caller: %v", err)
@@ -74,40 +74,45 @@ func (s *OrchestratorAdapter) GetTask() (models.Task, error) {
 	responseTask := <-resultChan
 	close(resultChan)
 	task := models.Task{
-		ExpressionID:  int(responseTask.ExpressionId),
-		TaskID:        int(responseTask.Id),
-		Arg1:          responseTask.Arg1,
-		Arg2:          responseTask.Arg2,
-		Operation:     responseTask.Operation,
-		OperationTime: responseTask.OperationTime.AsDuration(),
+		ExpressionID:  int(responseTask.GetExpressionId()),
+		TaskID:        int(responseTask.GetId()),
+		Arg1:          responseTask.GetArg1(),
+		Arg2:          responseTask.GetArg2(),
+		Operation:     responseTask.GetOperation(),
+		OperationTime: responseTask.GetOperationTime().AsDuration(),
 	}
 	return task, nil
 }
 
-func (s *OrchestratorAdapter) ResultTask(
+func (o *OrchestratorAdapter) ResultTask(
 	expressionID, taskID int, result float64,
 ) (string, error) {
-	conn, clientPointer, err := s.GetGRPCClient()
+	conn, clientPointer, err := o.GetGRPCClient()
 	if err != nil {
 		return "", fmt.Errorf("cannot connect to orchestrator by gRPC: %v", err)
 	}
 	defer conn.Close() //nolint
 
 	resultChan := make(chan string, 1)
-
 	err = callers.Retry(func() error {
-		request := &orchestrator.ResultTaskRequest{
-			ExpressionId: int64(expressionID),
-			Id:           int64(taskID),
-			Result:       result,
+		err = callers.Timeout(func() error {
+			request := &orchestrator.ResultTaskRequest{
+				ExpressionId: int64(expressionID),
+				Id:           int64(taskID),
+				Result:       result,
+			}
+			response, grpcErr := (*clientPointer).ResultTask(context.Background(), request)
+			if grpcErr != nil {
+				return fmt.Errorf("error in timeout gRPC caller: %v", grpcErr)
+			}
+			resultChan <- response.GetStatus()
+			return nil
+		}, o.Timeout)
+		if err != nil {
+			return fmt.Errorf("error in retry gRPC caller: %v", err)
 		}
-		response, grpcErr := (*clientPointer).ResultTask(context.Background(), request)
-		if grpcErr != nil {
-			return fmt.Errorf("error in timeout gRPC caller: %v", grpcErr)
-		}
-		resultChan <- response.GetStatus()
 		return nil
-	}, s.MaxRetries, s.BaseRetryDelay)
+	}, o.MaxRetries, o.BaseRetryDelay)
 
 	if err != nil {
 		log.Printf("error in timeout gRPC caller: %v", err)
@@ -119,8 +124,6 @@ func (s *OrchestratorAdapter) ResultTask(
 	if status == "task not found" {
 		return "", errors.ErrTaskNotFound
 	}
-	if status == "task completed" {
-		return status, nil
-	}
-	return "", errors.ErrInternalServerError
+
+	return status, nil
 }
