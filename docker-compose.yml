@@ -1,0 +1,67 @@
+services:
+  agent:
+    build:
+      context: ./
+      dockerfile: agent/Dockerfile
+    container_name: agent
+    env_file:
+      - .env
+    ports:
+      - ${AGENT_PORT}:${AGENT_PORT}
+    depends_on:
+      - orchestrator
+    volumes:
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  orchestrator:
+    build:
+      context: ./
+      dockerfile: orchestrator/Dockerfile
+    container_name: orchestrator
+    env_file:
+      - .env
+    ports:
+      - ${ORCHESTRATOR_PORT}:${ORCHESTRATOR_PORT}
+#    depends_on:
+#        -
+    volumes:
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  gateway:
+    build:
+      context: ./
+      dockerfile: gateway/Dockerfile
+    container_name: gateway
+    env_file:
+      - .env
+    ports:
+      - ${GATEWAY_PORT}:${GATEWAY_PORT}
+    depends_on:
+      - agent
+      - orchestrator
+    volumes:
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  frontend:
+    build:
+      context: ./
+      dockerfile: frontend/Dockerfile
+    container_name: frontend
+    env_file:
+      - .env
+    ports:
+      - "8081:8081"
+    depends_on:
+      - agent
+      - orchestrator
+      - gateway
+    volumes:
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+volumes:
+  go-mod-cache:
+  go-build-cache:
