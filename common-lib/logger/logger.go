@@ -3,6 +3,8 @@ package logger
 import (
 	"context"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"time"
 )
 
 type key string
@@ -16,8 +18,23 @@ type Logger struct {
 	l *zap.Logger
 }
 
-func NewLogger() (*Logger, error) {
-	logger, err := zap.NewProduction()
+func NewLogger(logLevel string) (*Logger, error) {
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.TimeKey = "time"
+	config.EncoderConfig.EncodeTime = zapcore.TimeEncoder(func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(t.Format("2006-01-02 15:04:05"))
+	})
+
+	var level zapcore.Level
+	switch logLevel {
+	case "debug":
+		level = zap.DebugLevel
+	case "info":
+		level = zap.InfoLevel
+	}
+	config.Level.SetLevel(level)
+
+	logger, err := config.Build()
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +45,12 @@ func NewLogger() (*Logger, error) {
 }
 
 func New(ctx context.Context) (context.Context, error) {
-	loggerStruct, err := NewLogger()
+	logLevel, ok := ctx.Value("log_level").(string)
+	if !ok {
+		logLevel = "debug"
+	}
+
+	loggerStruct, err := NewLogger(logLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +73,11 @@ func TryAppendRequestIDFromContext(ctx context.Context, fields []zap.Field) []za
 func GetOrCreateLoggerFromCtx(ctx context.Context) *Logger {
 	logger := GetLoggerFromCtx(ctx)
 	if logger == nil {
-		logger, _ = NewLogger()
+		logLevel, ok := ctx.Value("log_level").(string)
+		if !ok {
+			logLevel = "debug"
+		}
+		logger, _ = NewLogger(logLevel)
 	}
 	return logger
 }
