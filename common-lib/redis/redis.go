@@ -13,7 +13,7 @@ type Config struct {
 	Host     string `yaml:"host" env:"HOST" env-default:"redis"`
 	Port     uint16 `yaml:"port" env:"PORT" env-default:"6379"`
 	Username string `yaml:"user" env:"USER"`
-	Password string `yaml:"user_password" env:"USER_PASSWORD"`
+	Password string `yaml:"password" env:"PASSWORD"`
 
 	MaxRetries int `yaml:"max_retries" env:"MAX_RETRIES" env-default:"3"`
 	PoolSize   int `yaml:"pool_size" env:"POOL_SIZE" env-default:"10"`
