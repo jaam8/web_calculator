@@ -7,10 +7,11 @@ import (
 	"github.com/jaam8/web_calculator/common-lib/logger"
 	_ "github.com/jaam8/web_calculator/gateway/docs"
 	"github.com/jaam8/web_calculator/gateway/internal/config"
-	"github.com/jaam8/web_calculator/gateway/internal/http/handlers"
-	"github.com/jaam8/web_calculator/gateway/internal/http/middlewares"
+	grpc2 "github.com/jaam8/web_calculator/gateway/internal/delivery/grpc"
+	"github.com/jaam8/web_calculator/gateway/internal/delivery/http/handlers"
+	middlewares2 "github.com/jaam8/web_calculator/gateway/internal/delivery/http/middlewares"
+	"github.com/jaam8/web_calculator/gateway/internal/grpc"
 	"github.com/jaam8/web_calculator/gateway/internal/ports/adapters/orchestrator_adapters"
-	"github.com/jaam8/web_calculator/gateway/internal/services"
 	"github.com/labstack/echo/v4"
 	swagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
@@ -65,7 +66,7 @@ func main() {
 	//endregion
 
 	orchestratorAdapter := orchestrator_adapters.NewOrchestratorAdapter(orchestratorGrpcPool)
-	orchestratorService := services.NewOrchestratorService(
+	orchestratorService := grpc2.NewOrchestratorService(
 		orchestratorAdapter,
 		grpcPoolCfg.MaxRetries,
 		time.Millisecond*time.Duration(grpcPoolCfg.BaseRetryDelayMs),
@@ -74,8 +75,8 @@ func main() {
 
 	e := echo.New()
 
-	e.Use(middlewares.CORSMiddleware)
-	e.Use(middlewares.LogMiddleware)
+	e.Use(middlewares2.CORSMiddleware)
+	e.Use(middlewares2.LogMiddleware)
 
 	apiV1 := e.Group("/api/v1")
 

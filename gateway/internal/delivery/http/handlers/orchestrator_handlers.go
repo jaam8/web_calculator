@@ -5,8 +5,8 @@ import (
 	errs "github.com/jaam8/web_calculator/common-lib/errors"
 	"github.com/jaam8/web_calculator/common-lib/gen/orchestrator"
 	"github.com/jaam8/web_calculator/common-lib/logger"
-	"github.com/jaam8/web_calculator/gateway/internal/http/schemas"
-	"github.com/jaam8/web_calculator/gateway/internal/services"
+	"github.com/jaam8/web_calculator/gateway/internal/delivery/grpc"
+	"github.com/jaam8/web_calculator/gateway/internal/delivery/http/schemas"
 	"github.com/labstack/echo/v4"
 	_ "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
@@ -15,10 +15,10 @@ import (
 )
 
 type OrchestratorHandler struct {
-	orchestratorService *services.OrchestratorService
+	orchestratorService *grpc.OrchestratorService
 }
 
-func NewOrchestratorHandler(orchestratorService *services.OrchestratorService) *OrchestratorHandler {
+func NewOrchestratorHandler(orchestratorService *grpc.OrchestratorService) *OrchestratorHandler {
 	return &OrchestratorHandler{
 		orchestratorService: orchestratorService,
 	}
