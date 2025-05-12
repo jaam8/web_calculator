@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"github.com/jaam8/web_calculator/common-lib/grpc/pool"
 	"github.com/jaam8/web_calculator/common-lib/logger"
+	_ "github.com/jaam8/web_calculator/gateway/docs"
 	"github.com/jaam8/web_calculator/gateway/internal/config"
 	"github.com/jaam8/web_calculator/gateway/internal/http/handlers"
 	"github.com/jaam8/web_calculator/gateway/internal/http/middlewares"
 	"github.com/jaam8/web_calculator/gateway/internal/ports/adapters/orchestrator_adapters"
 	"github.com/jaam8/web_calculator/gateway/internal/services"
 	"github.com/labstack/echo/v4"
+	swagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -20,6 +22,11 @@ import (
 	"time"
 )
 
+// @title Web Calculator API
+// @version 1.0
+// @description Web Calculator Gateway Service API
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -75,6 +82,8 @@ func main() {
 	apiV1.POST("/calculate", orchestratorHandler.Calculate)
 	apiV1.GET("/expressions", orchestratorHandler.Expressions)
 	apiV1.GET("/expressions/:id", orchestratorHandler.ExpressionByID)
+
+	e.GET("/swagger/*", swagger.WrapHandler)
 
 	go func() {
 		logger.GetLoggerFromCtx(ctx).Info(ctx,

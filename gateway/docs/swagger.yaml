@@ -1,0 +1,145 @@
+basePath: /api/v1
+definitions:
+  schemas.CalculateRequest:
+    properties:
+      expression:
+        example: 40+2
+        type: string
+    type: object
+  schemas.CalculateResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+    type: object
+  schemas.CannotParseExpression:
+    properties:
+      error:
+        example: cannot parse expression
+        type: string
+    type: object
+  schemas.Expression:
+    properties:
+      id:
+        example: 1
+        type: integer
+      result:
+        example: 42
+        type: number
+      status:
+        example: done
+        type: string
+    type: object
+  schemas.ExpressionByIdResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+      result:
+        example: 42
+        type: number
+      status:
+        example: done
+        type: string
+    type: object
+  schemas.ExpressionNotFound:
+    properties:
+      error:
+        example: expression not found
+        type: string
+    type: object
+  schemas.ExpressionsResponse:
+    properties:
+      expressions:
+        items:
+          $ref: '#/definitions/schemas.Expression'
+        type: array
+    type: object
+  schemas.InternalServerError:
+    properties:
+      error:
+        example: internal server error
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Web Calculator Gateway Service API
+  title: Web Calculator API
+  version: "1.0"
+paths:
+  /calculate:
+    post:
+      consumes:
+      - application/json
+      description: Evaluates a mathematical expression and returns the result
+      parameters:
+      - description: Expression to calculate
+        in: body
+        name: expression
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.CalculateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/schemas.CalculateResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/schemas.CannotParseExpression'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.InternalServerError'
+      summary: Calculate mathematical expression
+      tags:
+      - Orchestrator
+  /expressions:
+    get:
+      description: Returns a list of all calculated expressions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.ExpressionsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.InternalServerError'
+      summary: Get all expressions
+      tags:
+      - Orchestrator
+  /expressions/{id}:
+    get:
+      description: Returns a specific expression by its ID
+      parameters:
+      - description: Expression ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.ExpressionByIdResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.ExpressionNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.InternalServerError'
+      summary: Get expression by ID
+      tags:
+      - Orchestrator
+swagger: "2.0"
