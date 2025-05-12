@@ -1,4 +1,20 @@
 services:
+  auth_service:
+    build:
+      context: ./
+      dockerfile: auth_service/Dockerfile
+    container_name: auth_service
+    env_file:
+      - .env
+    ports:
+      - ${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
   agent:
     build:
       context: ./
@@ -23,8 +39,8 @@ services:
       - .env
     ports:
       - ${ORCHESTRATOR_PORT}:${ORCHESTRATOR_PORT}
-#    depends_on:
-#        -
+    depends_on:
+      - auth_service
     volumes:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
@@ -41,6 +57,7 @@ services:
     depends_on:
       - agent
       - orchestrator
+      - auth_service
     volumes:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
@@ -62,6 +79,43 @@ services:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
 
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    expose:
+      - ${REDIS_PORT}
+    hostname: ${REDIS_HOST}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 1s
+      retries: 3
+    restart: unless-stopped
+
 volumes:
   go-mod-cache:
   go-build-cache:
+  postgres_data:
+  redis_data:
