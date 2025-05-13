@@ -152,20 +152,47 @@ func (s *AuthService) Refresh(ctx context.Context, req *auth_service.RefreshRequ
 		return nil, errs.ErrInvalidToken
 	}
 
+	sub, isRefresh, expTime, err := utils.ParseJWT(req.RefreshToken, s.jwtSecret)
+	if err != nil {
+		logger.GetLoggerFromCtx(ctx).Error(ctx,
+			"failed to parse refresh jwt token",
+			zap.String("refresh_token", req.RefreshToken),
+			zap.Error(err))
+		return nil, err
+	}
+
+	if !isRefresh {
+		logger.GetLoggerFromCtx(ctx).Error(ctx,
+			"refresh token is not a refresh token",
+			zap.String("refresh_token", req.RefreshToken),
+			zap.String("sub", sub))
+		return nil, errs.ErrInvalidToken
+	}
+
+	if time.Now().After(expTime) {
+		logger.GetLoggerFromCtx(ctx).Warn(ctx,
+			"refresh_token expired",
+			zap.String("refresh_token", req.RefreshToken),
+			zap.Time("exp_time", expTime))
+		return nil, errs.ErrTokenExpired
+	}
+
 	userID, err := s.cache.GetToken(req.RefreshToken, true)
 	if err != nil {
-		if errors.Is(err, errs.ErrTokenExpired) {
-			logger.GetLoggerFromCtx(ctx).Warn(ctx,
-				"refresh_token expired",
-				zap.String("refresh_token", req.RefreshToken),
-				zap.Error(err))
-			return nil, err
-		}
 		logger.GetLoggerFromCtx(ctx).Error(ctx,
 			"failed to get refresh_token from cache",
 			zap.String("refresh_token", req.RefreshToken),
 			zap.Error(err))
 		return nil, fmt.Errorf("failed to get refresh_token from cache: %w", err)
+	}
+
+	if userID != sub {
+		logger.GetLoggerFromCtx(ctx).Error(ctx,
+			"refresh token user id does not match",
+			zap.String("refresh_token", req.RefreshToken),
+			zap.String("user_id", userID),
+			zap.String("sub", sub))
+		return nil, errs.ErrInvalidToken
 	}
 
 	accessToken, err := utils.GenerateJWT(userID, s.jwtSecret, false, s.AccessExpiration)
@@ -198,6 +225,15 @@ func (s *AuthService) Refresh(ctx context.Context, req *auth_service.RefreshRequ
 			"failed to save refresh token in cache",
 			zap.Error(err))
 		return nil, fmt.Errorf("failed to save refresh token in cache: %w", err)
+	}
+
+	err = s.cache.DeleteToken(req.RefreshToken, true)
+	if err != nil {
+		logger.GetLoggerFromCtx(ctx).Error(ctx,
+			"failed to delete old refresh token from cache",
+			zap.String("refresh_token", req.RefreshToken),
+			zap.Error(err))
+		return nil, fmt.Errorf("failed to delete old refresh token from cache: %w", err)
 	}
 
 	logger.GetLoggerFromCtx(ctx).Info(ctx,
