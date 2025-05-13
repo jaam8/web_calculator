@@ -7,10 +7,12 @@ import (
 	"github.com/jaam8/web_calculator/common-lib/logger"
 	_ "github.com/jaam8/web_calculator/gateway/docs"
 	"github.com/jaam8/web_calculator/gateway/internal/config"
-	grpc2 "github.com/jaam8/web_calculator/gateway/internal/delivery/grpc"
+	grpc_servises "github.com/jaam8/web_calculator/gateway/internal/delivery/grpc"
 	"github.com/jaam8/web_calculator/gateway/internal/delivery/http/handlers"
-	middlewares2 "github.com/jaam8/web_calculator/gateway/internal/delivery/http/middlewares"
-	"github.com/jaam8/web_calculator/gateway/internal/grpc"
+	"github.com/jaam8/web_calculator/gateway/internal/delivery/http/middlewares"
+	"github.com/jaam8/web_calculator/gateway/internal/ports/adapters/auth_service_adapters"
+
+	//"github.com/jaam8/web_calculator/gateway/internal/delivery/grpc"
 	"github.com/jaam8/web_calculator/gateway/internal/ports/adapters/orchestrator_adapters"
 	"github.com/labstack/echo/v4"
 	swagger "github.com/swaggo/echo-swagger"
@@ -40,6 +42,7 @@ func main() {
 	ctx = context.WithValue(ctx, "log_level", cfg.LogLevel)
 	ctx, _ = logger.New(ctx)
 
+	authCfg := cfg.AuthService
 	orchestratorCfg := cfg.Orchestrator
 	gatewayCfg := cfg.Gateway
 	grpcPoolCfg := cfg.GrpcPool
@@ -66,23 +69,58 @@ func main() {
 	//endregion
 
 	orchestratorAdapter := orchestrator_adapters.NewOrchestratorAdapter(orchestratorGrpcPool)
-	orchestratorService := grpc2.NewOrchestratorService(
+	orchestratorService := grpc_servises.NewOrchestratorService(
 		orchestratorAdapter,
 		grpcPoolCfg.MaxRetries,
 		time.Millisecond*time.Duration(grpcPoolCfg.BaseRetryDelayMs),
 	)
 	orchestratorHandler := handlers.NewOrchestratorHandler(orchestratorService)
 
+	// region auth_service grpc pool
+	var authServiceGrpcPool *pool.GrpcPool
+	authServiceAddress := fmt.Sprintf("%s:%d", authCfg.UpstreamName, authCfg.UpstreamPort)
+	authServiceGrpcPool, err = pool.NewGrpcPool(ctx, pool.Config{
+		Address:        authServiceAddress,
+		MaxConnections: grpcPoolCfg.MaxConns,
+		MinConnections: grpcPoolCfg.MinConns,
+		DialOptions:    []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
+	})
+	if err != nil {
+		logger.GetLoggerFromCtx(ctx).Fatal(ctx, "couldn't create grpc pool for auth service",
+			zap.Int("MaxConnections", grpcPoolCfg.MaxConns),
+			zap.Int("MinConnections", grpcPoolCfg.MinConns),
+			zap.String("Address", authServiceAddress),
+			zap.Error(err),
+		)
+	}
+	// endregion
+
+	authServiceAdapter := auth_service_adapters.NewAuthServiceAdapter(authServiceGrpcPool)
+	authService := grpc_servises.NewAuthService(
+		authServiceAdapter,
+		grpcPoolCfg.MaxRetries,
+		time.Millisecond*time.Duration(grpcPoolCfg.BaseRetryDelayMs),
+	)
+	authHandler := handlers.NewAuthServiceHandler(
+		authService,
+		time.Duration(cfg.AccessTTL)*time.Minute,
+		time.Duration(cfg.RefreshTTL)*time.Hour,
+	)
+
 	e := echo.New()
 
-	e.Use(middlewares2.CORSMiddleware)
-	e.Use(middlewares2.LogMiddleware)
+	e.Use(middlewares.CORSMiddleware)
+	e.Use(middlewares.LogMiddleware)
 
 	apiV1 := e.Group("/api/v1")
+	auth := apiV1.Group("", middlewares.AuthMiddleware(cfg.JwtSecret))
 
-	apiV1.POST("/calculate", orchestratorHandler.Calculate)
-	apiV1.GET("/expressions", orchestratorHandler.Expressions)
-	apiV1.GET("/expressions/:id", orchestratorHandler.ExpressionByID)
+	auth.POST("/calculate", orchestratorHandler.Calculate)
+	auth.GET("/expressions", orchestratorHandler.Expressions)
+	auth.GET("/expressions/:id", orchestratorHandler.ExpressionByID)
+	apiV1.POST("/refresh-token", authHandler.Refresh)
+	apiV1.POST("/login", authHandler.Login)
+	apiV1.POST("/register", authHandler.Register)
 
 	e.GET("/swagger/*", swagger.WrapHandler)
 
