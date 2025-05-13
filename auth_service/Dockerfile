@@ -12,6 +12,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go work init ./common-lib ./auth_service && go mod download
 
 COPY auth_service/ ./auth_service/
+COPY db/migrations ./db/migrations/
 COPY common-lib/ ./common-lib/
 COPY .env/ ./.env
 
@@ -24,6 +25,7 @@ FROM gcr.io/distroless/base-debian12 AS runner
 WORKDIR /app
 
 COPY --from=builder /build/.env ../.env
+COPY --from=builder /build/db/migrations ../db/migrations
 COPY --from=builder /build/auth-service .
 
 CMD ["./auth-service"]

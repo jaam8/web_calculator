@@ -25,6 +25,7 @@ type Config struct {
 	JwtSecret         string `yaml:"jwt_secret" env:"JWT_SECRET"`
 	RefreshExpiration int    `yaml:"refresh_expiration" env:"REFRESH_EXPIRATION" env-default:"24"`
 	AccessExpiration  int    `yaml:"access_expiration" env:"ACCESS_EXPIRATION" env-default:"15"`
+	MigrationPath     string `yaml:"migration_path" env:"MIGRATION_PATH" env-default:"file:///db/migrations"`
 }
 
 func New() (Config, error) {

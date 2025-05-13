@@ -41,6 +41,10 @@ func main() {
 		log.Fatalf("failed to create postgres client: %v", err)
 	}
 
+	err = postgres.Migrate(ctx, postgresCfg, cfg.MigrationPath)
+	if err != nil {
+		log.Fatalf("failed to migrate postgres: %v", err)
+	}
 	redisAdapter := cache.NewAuthCacheAdapter(redisClient,
 		time.Hour*time.Duration(cfg.RefreshExpiration),
 		time.Minute*time.Duration(cfg.AccessExpiration),
@@ -52,7 +56,7 @@ func main() {
 		time.Hour*time.Duration(cfg.RefreshExpiration),
 		time.Minute*time.Duration(cfg.AccessExpiration),
 	)
-	
+
 	grpcServer, err := server.CreateGRPC(Server)
 	if err != nil {
 		log.Fatalf("failed to create gRPC server: %v", err)
