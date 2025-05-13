@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"time"
@@ -105,18 +106,17 @@ func TestParseJWT(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, isRef, err := ParseJWT(tt.token, tt.secretKey)
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("ParseJWT() error = %v, wantErr %v", err, tt.wantErr)
+			user, isRef, _, err := ParseJWT(tt.token, tt.secretKey)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantUser, user)
+				assert.Equal(t, tt.wantRefresh, isRef)
 			}
 			if err != nil {
 				return
-			}
-			if user != tt.wantUser {
-				t.Errorf("ParseJWT() got user = %s, want %s", user, tt.wantUser)
-			}
-			if isRef != tt.wantRefresh {
-				t.Errorf("ParseJWT() got isRefresh = %v, want %v", isRef, tt.wantRefresh)
 			}
 		})
 	}
