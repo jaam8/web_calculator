@@ -20,7 +20,7 @@ func GenerateJWT(userID, jwtSecret string, isRefresh bool, ttl time.Duration) (s
 }
 
 // ParseJWT parse jwt token, validate it and return user_id and is_refresh
-func ParseJWT(tokenStr, jwtSecret string) (string, bool, error) {
+func ParseJWT(tokenStr, jwtSecret string) (string, bool, time.Time, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return "", fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -28,20 +28,27 @@ func ParseJWT(tokenStr, jwtSecret string) (string, bool, error) {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil || !token.Valid {
-		return "", false, err
+		return "", false, time.Time{}, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", false, fmt.Errorf("invalid JWT claims")
+		return "", false, time.Time{}, fmt.Errorf("invalid JWT claims")
 	}
 
-	userID, ok := claims["sub"].(string)
-	if !ok {
-		return "", false, err
+	userID, err := claims.GetSubject()
+	if err != nil {
+		return "", false, time.Time{}, err
 	}
+
+	exp, err := token.Claims.GetExpirationTime()
+	if err != nil {
+		return "", false, time.Time{}, err
+	}
+
+	expTime := time.Unix(exp.Unix(), 0)
 
 	isRefresh, _ := claims["is_refresh"].(bool)
 
-	return userID, isRefresh, nil
+	return userID, isRefresh, expTime, nil
 }
