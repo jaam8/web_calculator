@@ -18,6 +18,24 @@ definitions:
         example: cannot parse expression
         type: string
     type: object
+  schemas.CannotParseRequest:
+    properties:
+      error:
+        example: cannot parse expression
+        type: string
+    type: object
+  schemas.EmptyLogin:
+    properties:
+      error:
+        example: empty login
+        type: string
+    type: object
+  schemas.EmptyPassword:
+    properties:
+      error:
+        example: empty password
+        type: string
+    type: object
   schemas.Expression:
     properties:
       id:
@@ -59,6 +77,48 @@ definitions:
     properties:
       error:
         example: internal server error
+        type: string
+    type: object
+  schemas.LoginRequest:
+    properties:
+      login:
+        example: qwerty
+        type: string
+      password:
+        example: qwerty123
+        type: string
+    type: object
+  schemas.RegisterRequest:
+    properties:
+      login:
+        example: qwerty
+        type: string
+      password:
+        example: qwerty123
+        type: string
+    type: object
+  schemas.RegisterResponse:
+    properties:
+      user_id:
+        example: 0196cb7d-7d60-78cc-ac28-f9e114de51fc
+        type: string
+    type: object
+  schemas.TokenExpired:
+    properties:
+      error:
+        example: token expired
+        type: string
+    type: object
+  schemas.TokenExpiredOrInvalid:
+    properties:
+      error:
+        example: token expired or invalid
+        type: string
+    type: object
+  schemas.WrongCredentials:
+    properties:
+      error:
+        example: wrong credentials, user not found
         type: string
     type: object
 host: localhost:8080
@@ -142,4 +202,103 @@ paths:
       summary: Get expression by ID
       tags:
       - Orchestrator
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user by login and password. Write access and refresh
+        tokens to cookies.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Empty password
+          schema:
+            $ref: '#/definitions/schemas.EmptyPassword'
+        "401":
+          description: Wrong credentials
+          schema:
+            $ref: '#/definitions/schemas.WrongCredentials'
+        "422":
+          description: Cannot parse request
+          schema:
+            $ref: '#/definitions/schemas.CannotParseRequest'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/schemas.InternalServerError'
+      summary: Login user
+      tags:
+      - Auth
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes access and refresh tokens using the refresh token from
+        the cookie. Returns new tokens in cookies.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Success generating new tokens
+        "401":
+          description: Token expired or invalid
+          schema:
+            $ref: '#/definitions/schemas.TokenExpiredOrInvalid'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/schemas.InternalServerError'
+      summary: Refresh access and refresh tokens
+      tags:
+      - Auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user with login and password. Returns user ID in
+        response body.
+      parameters:
+      - description: Register credentials
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.RegisterResponse'
+        "400":
+          description: Empty password"// @Failure 409 {object} schemas.MessageResponse
+            "User already exists
+          schema:
+            $ref: '#/definitions/schemas.EmptyPassword'
+        "401":
+          description: Wrong credentials
+          schema:
+            $ref: '#/definitions/schemas.WrongCredentials'
+        "422":
+          description: Cannot parse request
+          schema:
+            $ref: '#/definitions/schemas.CannotParseRequest'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/schemas.InternalServerError'
+      summary: Register new user
+      tags:
+      - Auth
 swagger: "2.0"

@@ -121,6 +121,151 @@
                     }
                 }
             }
+        },
+        "/login": {
+            "post": {
+                "description": "Authenticates a user by login and password. Write access and refresh tokens to cookies.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Empty password",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.EmptyPassword"
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong credentials",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.WrongCredentials"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot parse request",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.CannotParseRequest"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh": {
+            "post": {
+                "description": "Refreshes access and refresh tokens using the refresh token from the cookie. Returns new tokens in cookies.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh access and refresh tokens",
+                "responses": {
+                    "204": {
+                        "description": "Success generating new tokens"
+                    },
+                    "401": {
+                        "description": "Token expired or invalid",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.TokenExpiredOrInvalid"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "description": "Registers a new user with login and password. Returns user ID in response body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register new user",
+                "parameters": [
+                    {
+                        "description": "Register credentials",
+                        "name": "register",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Empty password\"// @Failure 409 {object} schemas.MessageResponse \"User already exists",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.EmptyPassword"
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong credentials",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.WrongCredentials"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot parse request",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.CannotParseRequest"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.InternalServerError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -148,6 +293,33 @@
                 "error": {
                     "type": "string",
                     "example": "cannot parse expression"
+                }
+            }
+        },
+        "schemas.CannotParseRequest": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "cannot parse expression"
+                }
+            }
+        },
+        "schemas.EmptyLogin": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "empty login"
+                }
+            }
+        },
+        "schemas.EmptyPassword": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "empty password"
                 }
             }
         },
@@ -211,6 +383,68 @@
                 "error": {
                     "type": "string",
                     "example": "internal server error"
+                }
+            }
+        },
+        "schemas.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "qwerty"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "qwerty123"
+                }
+            }
+        },
+        "schemas.RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "qwerty"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "qwerty123"
+                }
+            }
+        },
+        "schemas.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "example": "0196cb7d-7d60-78cc-ac28-f9e114de51fc"
+                }
+            }
+        },
+        "schemas.TokenExpired": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "token expired"
+                }
+            }
+        },
+        "schemas.TokenExpiredOrInvalid": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "token expired or invalid"
+                }
+            }
+        },
+        "schemas.WrongCredentials": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "wrong credentials, user not found"
                 }
             }
         }
