@@ -109,15 +109,15 @@ func main() {
 
 	e := echo.New()
 
+	apiV1 := e.Group("/api/v1")
+	auth := apiV1.Group("/", middlewares.AuthMiddleware(cfg.JwtSecret))
+
 	e.Use(middlewares.CORSMiddleware)
 	e.Use(middlewares.LogMiddleware)
 
-	apiV1 := e.Group("/api/v1")
-	auth := apiV1.Group("", middlewares.AuthMiddleware(cfg.JwtSecret))
-
-	auth.POST("/calculate", orchestratorHandler.Calculate)
-	auth.GET("/expressions", orchestratorHandler.Expressions)
-	auth.GET("/expressions/:id", orchestratorHandler.ExpressionByID)
+	auth.POST("calculate", orchestratorHandler.Calculate)
+	auth.GET("expressions", orchestratorHandler.Expressions)
+	auth.GET("expressions/:id", orchestratorHandler.ExpressionByID)
 	apiV1.POST("/refresh-token", authHandler.Refresh)
 	apiV1.POST("/login", authHandler.Login)
 	apiV1.POST("/register", authHandler.Register)
