@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"github.com/jaam8/web_calculator/common-lib/logger"
+	"github.com/jaam8/web_calculator/common-lib/postgres"
 	"github.com/jaam8/web_calculator/orchestrator/internal/config"
+	"github.com/jaam8/web_calculator/orchestrator/internal/ports/adapters/storage"
 	"github.com/jaam8/web_calculator/orchestrator/internal/server"
 	"github.com/jaam8/web_calculator/orchestrator/internal/service/utils"
 	"log"
@@ -24,6 +26,7 @@ func main() {
 	ctx, _ = logger.New(ctx)
 
 	orchestratorCfg := cfg.Orchestrator
+	postgresCfg := cfg.Postgres
 
 	durations := map[string]int{
 		"+": orchestratorCfg.TimeAddition,
@@ -33,7 +36,15 @@ func main() {
 	}
 	expressionManager := utils.NewExpressionManager(durations)
 
-	Server := server.NewOrchestratorService(expressionManager)
+	PostgresClient, err := postgres.New(ctx, postgresCfg)
+	defer PostgresClient.Close()
+	if err != nil {
+		log.Fatalf("failed to create postgres client: %v", err)
+	}
+
+	postgresAdapter := storage.NewPostgresAdapter(PostgresClient)
+
+	Server := server.NewOrchestratorService(postgresAdapter, expressionManager)
 	grpcServer, err := server.CreateGRPC(Server)
 	if err != nil {
 		log.Fatalf("failed to create gRPC server: %v", err)
