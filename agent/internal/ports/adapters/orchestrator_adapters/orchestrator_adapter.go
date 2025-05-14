@@ -74,7 +74,7 @@ func (o *OrchestratorAdapter) GetTask() (models.Task, error) {
 	responseTask := <-resultChan
 	close(resultChan)
 	task := models.Task{
-		ExpressionID:  int(responseTask.GetExpressionId()),
+		ExpressionID:  responseTask.GetExpressionId(),
 		TaskID:        int(responseTask.GetId()),
 		Arg1:          responseTask.GetArg1(),
 		Arg2:          responseTask.GetArg2(),
@@ -85,7 +85,7 @@ func (o *OrchestratorAdapter) GetTask() (models.Task, error) {
 }
 
 func (o *OrchestratorAdapter) ResultTask(
-	expressionID, taskID int, result float64,
+	expressionID string, taskID int, result float64,
 ) (string, error) {
 	conn, clientPointer, err := o.GetGRPCClient()
 	if err != nil {
@@ -97,7 +97,7 @@ func (o *OrchestratorAdapter) ResultTask(
 	err = callers.Retry(func() error {
 		err = callers.Timeout(func() error {
 			request := &orchestrator.ResultTaskRequest{
-				ExpressionId: int64(expressionID),
+				ExpressionId: expressionID,
 				Id:           int64(taskID),
 				Result:       result,
 			}

@@ -51,7 +51,7 @@ func (s *AgentService) Work(ctx context.Context, waitTime int) {
 
 		logger.GetLoggerFromCtx(ctx).Debug(ctx,
 			"GOT TASK",
-			zap.Int("expression_id", task.ExpressionID),
+			zap.String("expression_id", task.ExpressionID),
 			zap.Int("task_id", task.TaskID),
 			zap.String("operation", task.Operation),
 			zap.Float64("arg1", task.Arg1),
@@ -95,14 +95,14 @@ func (s *AgentService) Work(ctx context.Context, waitTime int) {
 		if err != nil {
 			logger.GetLoggerFromCtx(ctx).Error(ctx,
 				"Error send result for task",
-				zap.Int("expression_id", Result.ExpressionID),
+				zap.String("expression_id", Result.ExpressionID),
 				zap.Int("task_id", Result.TaskID),
 				zap.Float64("result", Result.Result),
 				zap.Error(err))
 		}
 		logger.GetLoggerFromCtx(ctx).Info(ctx,
 			"Send result for task",
-			zap.Int("expression_id", Result.ExpressionID),
+			zap.String("expression_id", Result.ExpressionID),
 			zap.Int("task_id", Result.TaskID),
 			zap.Float64("result", Result.Result),
 		)
