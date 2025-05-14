@@ -6,6 +6,7 @@ import (
 	"github.com/jaam8/web_calculator/common-lib/gen/orchestrator"
 	"github.com/jaam8/web_calculator/common-lib/grpc/interceptors"
 	"github.com/jaam8/web_calculator/common-lib/logger"
+	"github.com/jaam8/web_calculator/orchestrator/internal/ports"
 	"github.com/jaam8/web_calculator/orchestrator/internal/service"
 	"github.com/jaam8/web_calculator/orchestrator/internal/service/types"
 	"go.uber.org/zap"
@@ -20,9 +21,9 @@ func CreateGRPC(grpcSrv *service.OrchestratorService) (*grpc.Server, error) {
 }
 
 func NewOrchestratorService(
-	expressionManager types.ExpressionManager,
-) *service.OrchestratorService {
-	return service.NewOrchestratorService(expressionManager)
+	storage ports.StorageAdapter,
+	expressionManager types.ExpressionManager) *service.OrchestratorService {
+	return service.NewOrchestratorService(storage, expressionManager)
 }
 
 func RunGRPC(ctx context.Context, server *grpc.Server, port int) {
