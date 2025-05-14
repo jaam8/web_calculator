@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/google/uuid"
 	"github.com/jaam8/web_calculator/orchestrator/internal/models"
 	"sync"
 	"time"
@@ -22,7 +23,7 @@ func NewTaskManager(durations map[string]int) *TaskManager {
 }
 
 // CreateTask Создаёт новую задачу
-func (tm *TaskManager) CreateTask(arg1, arg2 float64, oper string, ExprID int) models.Task {
+func (tm *TaskManager) CreateTask(arg1, arg2 float64, oper string, ExprID uuid.UUID) models.Task {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 	tm.Counter++

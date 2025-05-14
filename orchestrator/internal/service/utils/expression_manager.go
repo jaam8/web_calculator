@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"github.com/google/uuid"
 	"github.com/jaam8/web_calculator/orchestrator/internal/models"
 	"github.com/jaam8/web_calculator/orchestrator/internal/service/types"
 	"sync"
@@ -8,8 +10,8 @@ import (
 
 type ExpressionManager struct {
 	mu           sync.Mutex
-	expressions  map[int]*models.Expression
-	taskManagers map[int]*TaskManager
+	expressions  map[uuid.UUID]*models.Expression
+	taskManagers map[uuid.UUID]*TaskManager
 	TaskCh       chan models.Task
 	counter      int
 	durations    map[string]int
@@ -18,35 +20,30 @@ type ExpressionManager struct {
 // NewExpressionManager Создаёт новый экземпляр ExpressionManager
 func NewExpressionManager(durations map[string]int) *ExpressionManager {
 	return &ExpressionManager{
-		expressions:  make(map[int]*models.Expression),
-		taskManagers: make(map[int]*TaskManager),
+		expressions:  make(map[uuid.UUID]*models.Expression),
+		taskManagers: make(map[uuid.UUID]*TaskManager),
 		TaskCh:       make(chan models.Task, 100),
 		durations:    durations,
 	}
 }
 
-// CreateExpression Создаёт новую задачу и возвращает её TaskID
-func (em *ExpressionManager) CreateExpression() (int, error) {
+// CreateExpression Создаёт TaskManager и добавляет его в мапу, а также добавляет Expression в мапу
+func (em *ExpressionManager) CreateExpression(expression *models.Expression) error {
 	em.mu.Lock()
 	defer em.mu.Unlock()
 
-	em.counter++
-	expressionID := em.counter
-	em.expressions[expressionID] = &models.Expression{
-		ExpressionID: expressionID,
-		Status:       "pending",
-	}
-	em.taskManagers[expressionID] = NewTaskManager(em.durations)
-	return expressionID, nil
+	em.expressions[expression.ExpressionID] = expression
+	em.taskManagers[expression.ExpressionID] = NewTaskManager(em.durations)
+	return nil
 }
 
 // GetTaskManager Возвращает TaskManager по ExpressionID
-func (em *ExpressionManager) GetTaskManager(expressionID int) (types.TaskManager, bool) {
+func (em *ExpressionManager) GetTaskManager(expressionID uuid.UUID) (types.TaskManager, error) {
 	taskManager, exists := em.taskManagers[expressionID]
 	if !exists || taskManager == nil {
-		return taskManager, false
+		return taskManager, fmt.Errorf("task manager not found for expression ID: %s", expressionID)
 	}
-	return taskManager, true
+	return taskManager, nil
 }
 
 // GetExpressions Возвращает все таски
@@ -59,7 +56,7 @@ func (em *ExpressionManager) GetExpressions() []*models.Expression {
 }
 
 // GetExpression Возвращает задачу по TaskID
-func (em *ExpressionManager) GetExpression(expressionID int) (*models.Expression, bool) {
+func (em *ExpressionManager) GetExpression(expressionID uuid.UUID) (*models.Expression, bool) {
 	expr, exists := em.expressions[expressionID]
 	return expr, exists
 }
@@ -75,7 +72,7 @@ func (em *ExpressionManager) GetTasks() chan models.Task {
 }
 
 // ExpressionDone Завершает и обновляет статус задачи
-func (em *ExpressionManager) ExpressionDone(expressionID int, result float64) {
+func (em *ExpressionManager) ExpressionDone(expressionID uuid.UUID, result float64) {
 	em.mu.Lock()
 	defer em.mu.Unlock()
 	expr, exists := em.expressions[expressionID]
@@ -87,7 +84,7 @@ func (em *ExpressionManager) ExpressionDone(expressionID int, result float64) {
 }
 
 // ExpressionError ставит ошибку в статусе если вдруг задача прошадшая валидацию, оказалась с ошибкой
-func (em *ExpressionManager) ExpressionError(expressionID int) {
+func (em *ExpressionManager) ExpressionError(expressionID uuid.UUID) {
 	em.mu.Lock()
 	defer em.mu.Unlock()
 	expr, exists := em.expressions[expressionID]
