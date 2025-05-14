@@ -9,7 +9,7 @@ import (
 
 type OrchestratorConfig struct {
 	Host string `yaml:"host" env:"HOST" env-default:"localhost"`
-	Port int    `yaml:"port" env:"PORT" env-default:"5432"`
+	Port int    `yaml:"port" env:"PORT" env-default:"50052"`
 
 	TimeAddition        int `env:"TIME_ADDITION_MS"`
 	TimeSubtraction     int `env:"TIME_SUBTRACTION_MS"`
