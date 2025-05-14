@@ -37,6 +37,7 @@ func main() {
 	}
 
 	PostgresClient, err := postgres.New(ctx, postgresCfg)
+	defer PostgresClient.Close()
 	if err != nil {
 		log.Fatalf("failed to create postgres client: %v", err)
 	}
