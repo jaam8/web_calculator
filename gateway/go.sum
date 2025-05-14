@@ -52,6 +52,8 @@ github.com/jaam8/web_calculator/common-lib v0.0.0-20250510222501-e4dab4ce4587 h1
 github.com/jaam8/web_calculator/common-lib v0.0.0-20250510222501-e4dab4ce4587/go.mod h1:jFOkaoVVL/wSpKK7RGArAXGWYJQJyZVU1pbKZoLZ+TM=
 github.com/jaam8/web_calculator/common-lib v0.0.0-20250512193801-8110edcb022d h1:oqIqF9ni39HLU8GkBMooqRT9haxm/Vm9cOdzq6cN+Tk=
 github.com/jaam8/web_calculator/common-lib v0.0.0-20250512193801-8110edcb022d/go.mod h1:jFOkaoVVL/wSpKK7RGArAXGWYJQJyZVU1pbKZoLZ+TM=
+github.com/jaam8/web_calculator/common-lib v0.0.0-20250513224611-5a15d6674a48 h1:m1eurxs2SkPMTD+4m5BylumkwRMHX8WvzSw3Di3jPgU=
+github.com/jaam8/web_calculator/common-lib v0.0.0-20250513224611-5a15d6674a48/go.mod h1:jFOkaoVVL/wSpKK7RGArAXGWYJQJyZVU1pbKZoLZ+TM=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
