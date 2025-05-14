@@ -18,16 +18,17 @@ service OrchestratorService {
 
 //--------------------------- Calculate ---------------------------
 message CalculateRequest {
-  string expression = 1;
+  string user_id = 1;
+  string expression = 2;
 }
 
 message CalculateResponse {
-  int64 id = 1;
+  string id = 1;
 }
 
 // --------------------------- Expression ------------------------
 message Expression {
-  int64 id = 1;
+  string id = 1;
   string status = 2;
   //  pending, done
   optional double result = 3;
@@ -35,7 +36,7 @@ message Expression {
 
 //--------------------------- Expressions ---------------------------
 message ExpressionsRequest {
-  int64 id = 1;
+  string user_id = 1;
 }
 
 message ExpressionsResponse {
@@ -44,7 +45,8 @@ message ExpressionsResponse {
 
 // --------------------------- ExpressionById ---------------------------
 message ExpressionByIdRequest {
-  int64 id = 1;
+  string user_id = 1;
+  string id = 2;
 }
 
 message ExpressionByIdResponse {
@@ -53,7 +55,7 @@ message ExpressionByIdResponse {
 
 //--------------------------- Task ------------------------------
 message Task {
-  int64 expression_id = 1;
+  string expression_id = 1;
   int64 id = 2;
   double arg1 = 3;
   double arg2 = 4;
@@ -68,7 +70,7 @@ message GetTaskResponse {
 
 //--------------------------- ResultTask ---------------------------
 message ResultTaskRequest {
-  int64 expression_id = 1;
+  string expression_id = 1;
   int64 id = 2;
   double result = 3;
 }
