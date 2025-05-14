@@ -16,19 +16,61 @@
 
 - Обработку ошибок, если выражение некорректно или произошла внутренняя ошибка сервиса.
 
+## Примеры и эндпоинты [localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
 
 ## Схема работы
 
 ---
 ```mermaid
-graph LR
-   classDef elem stroke-width:0px;
-   C(client):::elem -->|POST api/v1/calculate| O([orchestrator]):::elem
-   C -->|GET api/v1/expressions| O
-   C -->|"GET api/v1/expressions/:id "| O
-   O <-->|"POST | GET<br>" /internal/task| A1[agent 1]:::elem
-   O <-->|"POST | GET<br>" /internal/task| A2[agent 2]:::elem
-   O <-->|"POST | GET<br>" /internal/task| A3[agent n]:::elem
+flowchart LR
+subgraph all["http endpoint"]
+   n["POST api/v1/calculate
+   GET api/v1/expressions
+   GET api/v1/expressions/:id
+   POST api/v1/register
+   POST api/v1/login
+   POST api/v1/refresh-token"]
+end
+subgraph orchestrator["grpc endpoint"]
+   o["Calculate
+   Expressions
+   ExpressionById"]
+end
+subgraph auth["grpc endpoint"]
+   a["Register
+   Login
+   Refresh"]
+end
+
+   cookie[("tokens")] -- cookies --> C("client")
+   C --> all
+   all --> G(["gateway"])
+   O(["orchestrator"]) <-- Calculate --> A1["agent 1"] & A2["agent 2"] & A3["agent n"]
+   G <--> orchestrator & auth
+   orchestrator <--> O
+   auth <--> A(["auth_service"])
+   C -- sends tokens --> G
+   A <--> redis[("redis")] & a_db[("postgres")]
+   O <--> o_db[("postgres")]
+
+   n:::elem
+   o:::elem
+   a:::elem
+   C:::elem
+   all:::elem
+   G:::elem
+   O:::elem
+   A1:::elem
+   A2:::elem
+   A3:::elem
+   orchestrator:::elem
+   auth:::elem
+   A:::elem
+   classDef elem stroke-width:0px
+   style cookie stroke:#757575
+   style redis stroke:#757575
+   style a_db stroke:#757575
+   style o_db stroke:#757575
 ```
 
 ## Веб-интерфейс
@@ -72,213 +114,63 @@ go mod tidy
 ```bash
 cp .env.example .env
 ```
-Значение переменных среды: 
-```dotenv
-REQUEST_URL=<url для запроса агента>
-PORT=<порт для запуска сервиса>
-TIME_ADDITION_MS=<время выполнения сложения в миллисекундах>
-TIME_SUBTRACTION_MS=<время выполнения вычитания в миллисекундах>
-TIME_MULTIPLICATIONS_MS=<время выполнения умножения в миллисекундах>
-TIME_DIVISIONS_MS=<время выполнения деления в миллисекундах>
-COMPUTING_POWER=<колличество агентов (горутин)>
-WAIT_TIME_MS=<время между запросов агента в миллисекундах>
-```
 
-### 4. Запустите проект с помощью команды:
-- Запуск оркестратора и агента:
-    ```bash
-    go run ./cmd/main.go
-    ```
-- Запуск фронтенда:
+### 4. Запуск проекта:
+- Запуск с помощью `docker-compose`:
    ```bash
-  go run ./frontend/main.go
+   docker-compose up -d
+   ```
+- Обычный запуск:
+   ```bash
+  make run
   ```
-- Запуск только оркестратора:
-    ```bash
-    go run ./cmd/orchestrator/main.go
-    ```
-- Запуск только агента:
-    ```bash
-    go run ./cmd/agent/main.go
-    ```
 
 ### 5. Фронтенд будет доступен по адресу: [http://localhost:8081](http://localhost:8081)
 
-## Примеры и эндпоинты
-
----
-
-## `POST /api/v1/calculate`
-### Пример запроса:
-```bash
-curl --location 'localhost:8080/api/v1/calculate' \
---header 'Content-Type: application/json' \
---data '{"expression": "2 + 2 * 2"}'
-```
-
-### Ответы сервиса:
-1. Выражение принятно для вычисления
-   - HTTP код: `201`
-   - Тело ответа:
-      ```json
-      {"id": "<id выражения>"}
-      ```
-
-2. Некорректное выражение:
-   - HTTP код: `422`
-   - Тело ответа:
-     ```json
-     "invalid expression"
-     ```
-
-3. Что-то пошло не так:
-   - HTTP код: `500`
-   - Тело ответа:
-     ```json
-     "internal server error"
-     ```
-## `GET /api/v1/expressions`
-### Пример запроса:
-
-```bash
-curl --location 'localhost:8080/api/v1/expressions'
-```
-### Ответы сервиса:
-1. Успешно получен список выражений
-    - HTTP код: `200`
-    - Пример ответа:
-    ```json
-   {
-       "expressions": [
-           {
-               "id": 1,
-               "status": "done",
-               "result": 6
-           },
-           {
-               "id": 2,
-               "status": "pending",
-               "result": 0
-           }
-        ]
-   }
-    ```
-      
-2. Что-то пошло не так:
-    - HTTP код: `500`
-    - Тело ответа:
-      ```json
-      "internal server error"
-      ```
-      
-## `GET /api/v1/expressions/:id`
-### Пример запроса:
-```bash
-curl --location 'localhost:8080/api/v1/expressions/1'
-```
-### Ответы сервиса:
-1. Успешно получен список выражений
-    - HTTP код: `200`
-    - Пример ответа:
-    ```json
-    {
-      "expression":
-      {
-        "id": 1,
-        "status": "done",
-        "result": 6
-      }
-    } 
-    ```
-2. Выражение не найдено
-    - HTTP код: `404`
-    - Тело ответа:
-      ```json
-      "expression not found"
-      ```
-      
-3. Что-то пошло не так
-    - HTTP код: `500`
-    - Тело ответа:
-      ```json
-      "internal server error"
-      ```
-      
-## `GET /internal/task`
-### Пример запроса:
-```bash
-curl --location 'localhost:8080/internal/task'
-```
-### Ответы сервиса:
-1. Успешно получена задача
-    - HTTP код: `200`
-    - Пример ответа:
-    ```json
-    {
-        "task":
-            {
-                "id": 1,
-                "arg1": 2,
-                "arg2": 2,
-                "operation": "*",
-                "operation_time": 1000
-            }
-    }
-    ```
-2. Нет задачи для выполнения
-    - HTTP код: `404`
-    - Тело ответа:
-      ```json
-      "task not found"
-      ```
-
-3. Что-то пошло не так
-    - HTTP код: `500`
-    - Тело ответа:
-      ```json
-      "internal server error"
-      ```
-      
-## `POST /internal/task`
-### Пример запроса:
-```
-curl --location 'localhost:8080/internal/task' \
---header 'Content-Type: application/json' \
---data '{
-  "id": 1,
-  "result": 4
-}'
-```
-
-### Ответы сервиса:
-1. Результат задачи успешно записан
-    - HTTP код: `200`
-    - Тело ответа:
-       ```json
-       "task completed"
-       ```
-
-2. Задача не найдена
-    - HTTP код: `404`
-    - Тело ответа:
-      ```json
-      "task not found"
-      ```
-
-3. Некорректные данные:
-    - HTTP код: `422`
-    - Тело ответа:
-      ```json
-      "invalid data"
-      ```
-
-4. Что-то пошло не так:
-    - HTTP код: `500`
-    - Тело ответа:
-      ```json
-      "internal server error"
-      ```
-
+## Переменные окружения
+| Переменная                             | Описание                                                             | Значение по умолчанию   |
+|----------------------------------------|----------------------------------------------------------------------|-------------------------|
+| `ORCHESTRATOR_HOST`                    | Хост сервиса оркестратора                                            | `localhost`             |
+| `ORCHESTRATOR_PORT`                    | Порт сервиса оркестратора                                            | `50052`                 |
+| `ORCHESTRATOR_TIMEOUT_MS`              | Таймаут запроса к оркестратору (в миллисекундах)                     | `3000`                  |
+| `ORCHESTRATOR_MAX_RETRIES`             | Максимальное количество повторов запроса                             | `3`                     |
+| `ORCHESTRATOR_BASE_RETRY_DELAY`        | Базовая задержка перед повторной попыткой (в миллисекундах)          | `2000`                  |
+| `ORCHESTRATOR_TIME_ADDITION_MS`        | Время вычисления операции сложения (в миллисекундах)                 | `100`                   |
+| `ORCHESTRATOR_TIME_SUBTRACTION_MS`     | Время вычисления операции вычитания (в миллисекундах)                | `100`                   |
+| `ORCHESTRATOR_TIME_MULTIPLICATIONS_MS` | Время вычисления операции умножения (в миллисекундах)                | `100`                   |
+| `ORCHESTRATOR_TIME_DIVISIONS_MS`       | Время вычисления операции деления (в миллисекундах)                  | `100`                   |
+| `ORCHESTRATOR_UPSTREAM_NAME`           | Имя upstream сервиса оркестратора                                    | `orchestrator`          |
+| `ORCHESTRATOR_UPSTREAM_PORT`           | Порт upstream сервиса оркестратора                                   | `50052`                 |
+| `POSTGRES_HOST`                        | Хост базы данных PostgreSQL                                          | `postgres`              |
+| `POSTGRES_PORT`                        | Порт PostgreSQL                                                      | `5432`                  |
+| `POSTGRES_USER`                        | Пользователь для подключения к PostgreSQL                            | `postgres`              |
+| `POSTGRES_PASSWORD`                    | Пароль для подключения к PostgreSQL                                  | `1234`                  |
+| `POSTGRES_DB`                          | Имя базы данных для приложения                                       | `web_calculator`        |
+| `REDIS_HOST`                           | Хост сервиса Redis                                                   | `redis`                 |
+| `REDIS_PORT`                           | Порт Redis                                                           | `6379`                  |
+| `AUTH_SERVICE_HOST`                    | Хост сервиса аутентификации                                          | `localhost`             |
+| `AUTH_SERVICE_PORT`                    | Порт сервиса аутентификации                                          | `50051`                 |
+| `AUTH_SERVICE_REDIS_DB`                | Номер базы данных Redis для аутентификации                           | `0`                     |
+| `AUTH_SERVICE_TIMEOUT_MS`              | Таймаут запроса к сервису аутентификации (в миллисекундах)           | `3000`                  |
+| `AUTH_SERVICE_MAX_RETRIES`             | Максимальное количество повторов запроса к сервису аутентификации    | `3`                     |
+| `AUTH_SERVICE_BASE_RETRY_DELAY`        | Базовая задержка перед повторной попыткой (в миллисекундах)          | `2000`                  |
+| `AUTH_SERVICE_UPSTREAM_NAME`           | Имя upstream сервиса аутентификации                                  | `auth_service`          |
+| `AUTH_SERVICE_UPSTREAM_PORT`           | Порт upstream сервиса аутентификации                                 | `50051`                 |
+| `AGENT_HOST`                           | Хост агента вычислений                                               | `localhost`             |
+| `AGENT_PORT`                           | Порт агента вычислений                                               | `50053`                 |
+| `AGENT_COMPUTING_POWER`                | Количество агентов (горутин) для вычислений                          | `2`                     |
+| `AGENT_WAIT_TIME_MS`                   | Время ожидания между запросами агента (в миллисекундах)              | `1000`                  |
+| `GRPC_POOL_MAX_CONNECTIONS`            | Максимальное количество gRPC-соединений                              | `100`                   |
+| `GRPC_POOL_MIN_CONNECTIONS`            | Минимальное количество gRPC-соединений                               | `1`                     |
+| `GRPC_POOL_MAX_RETRIES`                | Максимальное количество повторов gRPC-запроса                        | `3`                     |
+| `GRPC_POOL_BASE_RETRY_DELAY_MS`        | Базовая задержка перед повторной попыткой gRPC-запроса (в миллисек.) | `300`                   |
+| `GATEWAY_HOST`                         | Хост для gateway сервиса                                             | `localhost`             |
+| `GATEWAY_PORT`                         | Порт для gateway сервиса                                             | `8080`                  |
+| `MIGRATION_PATH`                       | Путь до файлов миграций БД                                           | `file:///db/migrations` |
+| `LOG_LEVEL`                            | Уровень логирования                                                  | `debug`                 |
+| `JWT_SECRET`                           | Секретный ключ для JWT                                               | `secret`                |
+| `REFRESH_EXPIRATION`                   | Время жизни refresh-токена (в часах)                                 | `24`                    |
+| `ACCESS_EXPIRATION`                    | Время жизни access-токена (в минутах)                                | `15`                    |
 
 ## Тестирование
 
