@@ -15,6 +15,12 @@ type PostgresAdapter struct {
 	pool *pgxpool.Pool
 }
 
+func NewPostgresAdapter(pool *pgxpool.Pool) *PostgresAdapter {
+	return &PostgresAdapter{
+		pool: pool,
+	}
+}
+
 func (a *PostgresAdapter) SaveExpression(expression models.Expression) (uuid.UUID, error) {
 	query := `INSERT INTO expressions.expressions (user_id, status, result) 
 			  VALUES ($1, $2, $3)
@@ -72,8 +78,8 @@ func (a *PostgresAdapter) GetExpressions(userId uuid.UUID) ([]*models.Expression
 }
 
 func (a *PostgresAdapter) UpdateExpression(userId, id uuid.UUID, status *string, result *float64) error {
-	query := `UPDATE expressions.expressions WHERE user_id = $1 AND id = $2`
-	args := []any{userId, id}
+	query := `UPDATE expressions.expressions`
+	args := make([]any, 0, 4)
 	if status != nil {
 		args = append(args, status)
 		query += fmt.Sprintf(` SET status = $%d`, len(args))
@@ -82,6 +88,8 @@ func (a *PostgresAdapter) UpdateExpression(userId, id uuid.UUID, status *string,
 		args = append(args, result)
 		query += fmt.Sprintf(` SET result = $%d`, len(args))
 	}
+	args = append(args, userId, id)
+	query += fmt.Sprintf(` WHERE user_id = $%d AND id = $%d`, len(args)-1, len(args))
 	_, err := a.pool.Exec(context.Background(), query, args...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
