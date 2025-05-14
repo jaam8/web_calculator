@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"github.com/google/uuid"
 	errs "github.com/jaam8/web_calculator/common-lib/errors"
 	"github.com/jaam8/web_calculator/common-lib/gen/orchestrator"
 	"github.com/jaam8/web_calculator/common-lib/logger"
@@ -11,7 +12,6 @@ import (
 	_ "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
 	"net/http"
-	"strconv"
 )
 
 type OrchestratorHandler struct {
@@ -26,6 +26,7 @@ func NewOrchestratorHandler(orchestratorService *grpc.OrchestratorService) *Orch
 
 // @Summary Calculate mathematical expression
 // @Description Evaluates a mathematical expression and returns the result
+// @Security Bearer <jwt_access_token>
 // @Tags Orchestrator
 // @Accept json
 // @Produce json
@@ -40,6 +41,7 @@ func (h *OrchestratorHandler) Calculate(c echo.Context) error {
 		return c.JSON(http.StatusUnprocessableEntity, schemas.CannotParseExpressionMsg)
 	}
 	calculateRequest := &orchestrator.CalculateRequest{
+		UserId:     c.Get("userID").(string),
 		Expression: request.Expression,
 	}
 	response, err := h.orchestratorService.Calculate(calculateRequest)
@@ -60,13 +62,17 @@ func (h *OrchestratorHandler) Calculate(c echo.Context) error {
 
 // @Summary Get all expressions
 // @Description Returns a list of all calculated expressions
+// @Security Bearer <jwt_access_token>
 // @Tags Orchestrator
 // @Produce json
 // @Success 200 {object} schemas.ExpressionsResponse
 // @Failure 500 {object} schemas.InternalServerError
 // @Router /expressions [get]
 func (h *OrchestratorHandler) Expressions(c echo.Context) error {
-	req := &orchestrator.ExpressionsRequest{Id: 1}
+	req := &orchestrator.ExpressionsRequest{
+		UserId: c.Get("userID").(string),
+	}
+
 	expressions, err := h.orchestratorService.Expressions(req)
 	if err != nil {
 		logger.GetOrCreateLoggerFromCtx(c.Request().Context()).Error(
@@ -80,6 +86,7 @@ func (h *OrchestratorHandler) Expressions(c echo.Context) error {
 
 // @Summary Get expression by ID
 // @Description Returns a specific expression by its ID
+// @Security Bearer <jwt_access_token>
 // @Tags Orchestrator
 // @Produce json
 // @Param id path int true "Expression ID"
@@ -88,12 +95,17 @@ func (h *OrchestratorHandler) Expressions(c echo.Context) error {
 // @Failure 500 {object} schemas.InternalServerError
 // @Router /expressions/{id} [get]
 func (h *OrchestratorHandler) ExpressionByID(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
+	exprId := c.Param("id")
+	if exprId == "" {
 		return c.JSON(http.StatusInternalServerError, schemas.CannotParseIdMsg)
 	}
+	if _, err := uuid.Parse(exprId); err != nil {
+		return c.JSON(http.StatusNotFound, schemas.CannotParseIdMsg)
+	}
+
 	req := &orchestrator.ExpressionByIdRequest{
-		Id: int64(id),
+		UserId: c.Get("userID").(string),
+		Id:     exprId,
 	}
 	expression, err := h.orchestratorService.ExpressionByID(req)
 	switch {

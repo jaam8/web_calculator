@@ -21,6 +21,8 @@ func NewAuthServiceHandler(authService *grpc.AuthService,
 	AccessTTL, RefreshTTL time.Duration) *AuthServiceHandler {
 	return &AuthServiceHandler{
 		authService: authService,
+		AccessTTL:   AccessTTL,
+		RefreshTTL:  RefreshTTL,
 	}
 }
 
@@ -72,13 +74,13 @@ func (h *AuthServiceHandler) Login(c echo.Context) error {
 			AccessToken:  response.AccessToken,
 			RefreshToken: response.RefreshToken,
 		})
-	case errors.Is(err, errs.ErrWrongPassword):
+	case errors.As(err, &errs.ErrWrongPassword):
 		return c.JSON(http.StatusUnauthorized, schemas.WrongCredentialsMsg)
-	case errors.Is(err, errs.ErrUserNotFound):
+	case errors.As(err, &errs.ErrUserNotFound):
 		return c.JSON(http.StatusUnauthorized, schemas.WrongCredentialsMsg)
-	case errors.Is(err, errs.ErrEmptyLogin):
+	case errors.As(err, &errs.ErrEmptyLogin):
 		return c.JSON(http.StatusBadRequest, schemas.EmptyLoginMsg)
-	case errors.Is(err, errs.ErrEmptyPassword):
+	case errors.As(err, &errs.ErrEmptyPassword):
 		return c.JSON(http.StatusBadRequest, schemas.EmptyPasswordMsg)
 	default:
 		return c.JSON(http.StatusInternalServerError, schemas.InternalServerErrorMsg)
@@ -111,11 +113,11 @@ func (h *AuthServiceHandler) Register(c echo.Context) error {
 	switch {
 	case err == nil:
 		return c.JSON(http.StatusOK, schemas.RegisterResponse{UserId: response.UserId})
-	case errors.Is(err, errs.ErrUserAlreadyExists):
+	case errors.As(err, &errs.ErrUserAlreadyExists):
 		return c.JSON(http.StatusUnauthorized, schemas.WrongCredentialsMsg)
-	case errors.Is(err, errs.ErrEmptyLogin):
+	case errors.As(err, &errs.ErrEmptyLogin):
 		return c.JSON(http.StatusBadRequest, schemas.EmptyLoginMsg)
-	case errors.Is(err, errs.ErrEmptyPassword):
+	case errors.As(err, &errs.ErrEmptyPassword):
 		return c.JSON(http.StatusBadRequest, schemas.EmptyPasswordMsg)
 	default:
 		return c.JSON(http.StatusInternalServerError, schemas.InternalServerErrorMsg)
@@ -163,9 +165,9 @@ func (h *AuthServiceHandler) Refresh(c echo.Context) error {
 		})
 
 		return c.NoContent(http.StatusNoContent)
-	case errors.Is(err, errs.ErrTokenExpired):
+	case errors.As(err, &errs.ErrTokenExpired):
 		return c.JSON(http.StatusUnauthorized, schemas.TokenExpiredMsg)
-	case errors.Is(err, errs.ErrInvalidToken):
+	case errors.As(err, &errs.ErrInvalidToken):
 		return c.JSON(http.StatusUnauthorized, schemas.TokenExpiredOrInvalidMsg)
 	default:
 		return c.JSON(http.StatusInternalServerError, schemas.InternalServerErrorMsg)
