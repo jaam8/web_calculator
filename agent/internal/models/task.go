@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Task struct {
-	ExpressionID  int
+	ExpressionID  string
 	TaskID        int           `json:"id"`
 	Arg1          float64       `json:"arg1"`
 	Arg2          float64       `json:"arg2"`

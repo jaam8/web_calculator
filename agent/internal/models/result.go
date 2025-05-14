@@ -1,7 +1,7 @@
 package models
 
 type Result struct {
-	ExpressionID int
+	ExpressionID string
 	TaskID       int     `json:"id"`
 	Result       float64 `json:"result"`
 }
