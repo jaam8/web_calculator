@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/calculate": {
             "post": {
+                "security": [
+                    {
+                        "Bearer \u003cjwt_access_token\u003e": []
+                    }
+                ],
                 "description": "Evaluates a mathematical expression and returns the result",
                 "consumes": [
                     "application/json"
@@ -63,6 +68,11 @@ const docTemplate = `{
         },
         "/expressions": {
             "get": {
+                "security": [
+                    {
+                        "Bearer \u003cjwt_access_token\u003e": []
+                    }
+                ],
                 "description": "Returns a list of all calculated expressions",
                 "produces": [
                     "application/json"
@@ -89,6 +99,11 @@ const docTemplate = `{
         },
         "/expressions/{id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer \u003cjwt_access_token\u003e": []
+                    }
+                ],
                 "description": "Returns a specific expression by its ID",
                 "produces": [
                     "application/json"
