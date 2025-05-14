@@ -1,9 +1,12 @@
 package models
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type Task struct {
-	ExpressionID  int
+	ExpressionID  uuid.UUID
 	TaskID        int           `json:"id"`
 	Arg1          float64       `json:"arg1"`
 	Arg2          float64       `json:"arg2"`
