@@ -28,7 +28,7 @@ func (a *AuthPostgresAdapter) RegisterUser(login, hashPassword string) (string, 
 	err := a.pool.QueryRow(context.Background(), query, login, hashPassword).Scan(&id)
 	if err != nil {
 		switch {
-		case errors.Is(err, pgx.ErrTooManyRows):
+		case errors.As(err, &pgx.ErrTooManyRows):
 			return "", errs.ErrUserAlreadyExists
 		default:
 			return "", fmt.Errorf("failed to register user: %w", err)
@@ -40,7 +40,7 @@ func (a *AuthPostgresAdapter) RegisterUser(login, hashPassword string) (string, 
 func (a *AuthPostgresAdapter) LoginUser(login string) (string, string, error) {
 	query := `SELECT id, password_hash FROM users.users WHERE login = $1`
 	var id, hash string
-	err := a.pool.QueryRow(context.Background(), query, login).Scan(&id, hash)
+	err := a.pool.QueryRow(context.Background(), query, login).Scan(&id, &hash)
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
