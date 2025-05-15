@@ -39,15 +39,15 @@ func (a *PostgresAdapter) SaveExpression(expression models.Expression) (uuid.UUI
 func (a *PostgresAdapter) GetExpressionById(userId, id uuid.UUID) (*models.Expression, error) {
 	query := `SELECT status, result FROM expressions.expressions
 			  WHERE user_id = $1 AND id = $2`
-	expr := &models.Expression{UserId: userId, ExpressionID: id}
-	err := a.pool.QueryRow(context.Background(), query, userId, id).Scan(expr)
+	expr := models.Expression{UserId: userId, ExpressionID: id}
+	err := a.pool.QueryRow(context.Background(), query, userId, id).Scan(&expr.Status, &expr.Result)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errs.ErrExpressionNotFound
 		}
 		return nil, fmt.Errorf("failed to get expression: %w", err)
 	}
-	return expr, nil
+	return &expr, nil
 }
 
 func (a *PostgresAdapter) GetExpressions(userId uuid.UUID) ([]*models.Expression, error) {

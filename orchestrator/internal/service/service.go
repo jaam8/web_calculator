@@ -139,15 +139,15 @@ func (s *OrchestratorService) Expressions(
 func (s *OrchestratorService) ExpressionById(
 	ctx context.Context, request *orchestrator.ExpressionByIdRequest,
 ) (*orchestrator.ExpressionByIdResponse, error) {
-	//userId, err := uuid.Parse(request.UserId)
-	//if err != nil {
-	//	logger.GetLoggerFromCtx(ctx).Error(ctx,
-	//		"failed to parse user id",
-	//		zap.String("userID", request.UserId),
-	//		zap.Error(err),
-	//	)
-	//	return nil, fmt.Errorf("failed to parse user id: %w", err)
-	//}
+	userId, err := uuid.Parse(request.UserId)
+	if err != nil {
+		logger.GetLoggerFromCtx(ctx).Error(ctx,
+			"failed to parse user id",
+			zap.String("userID", request.UserId),
+			zap.Error(err),
+		)
+		return nil, fmt.Errorf("failed to parse user id: %w", err)
+	}
 
 	expressionId, err := uuid.Parse(request.Id)
 	if err != nil {
@@ -159,20 +159,41 @@ func (s *OrchestratorService) ExpressionById(
 		return nil, fmt.Errorf("failed to parse expression id: %w", err)
 	}
 
-	expression, ok := s.expressionManager.GetExpression(expressionId)
-	if !ok {
-		logger.GetLoggerFromCtx(ctx).Warn(ctx,
-			fmt.Sprintf("no expression found for id: %s", request.Id),
-			zap.String("expressionID", request.Id),
-		)
-		return nil, errs.ErrExpressionNotFound
-	}
+	//expression, ok := s.expressionManager.GetExpression(expressionId)
+	//if !ok {
+	//	logger.GetLoggerFromCtx(ctx).Warn(ctx,
+	//		fmt.Sprintf("no expression found for id: %s", request.Id),
+	//		zap.String("expressionID", request.Id),
+	//	)
+	//	return nil, errs.ErrExpressionNotFound
+	//}
 
+	expression, err := s.storage.GetExpressionById(userId, expressionId)
+	if err != nil {
+		if errors.Is(err, errs.ErrExpressionNotFound) {
+			logger.GetLoggerFromCtx(ctx).Warn(ctx,
+				"no expression found",
+				zap.String("userID", userId.String()),
+				zap.String("expressionID", request.Id),
+			)
+			return nil, errs.ErrExpressionNotFound
+		}
+		logger.GetLoggerFromCtx(ctx).Error(ctx,
+			"failed to get expression",
+			zap.String("userID", userId.String()),
+			zap.String("expressionID", request.Id),
+			zap.Error(err),
+		)
+		return nil, fmt.Errorf("failed to get expression: %w", err)
+	}
 	expr := &orchestrator.Expression{
 		Id:     expression.ExpressionID.String(),
 		Status: expression.Status,
-		Result: expression.Result,
 	}
+	if expression.Result != nil {
+		expr.Result = expression.Result
+	}
+	
 	logger.GetLoggerFromCtx(ctx).Info(ctx,
 		"got expression by id",
 		zap.String("ExpressionID", expr.Id),
