@@ -78,15 +78,18 @@ func (a *PostgresAdapter) GetExpressions(userId uuid.UUID) ([]*models.Expression
 }
 
 func (a *PostgresAdapter) UpdateExpression(userId, id uuid.UUID, status *string, result *float64) error {
-	query := `UPDATE expressions.expressions`
+	query := `UPDATE expressions.expressions SET`
 	args := make([]any, 0, 4)
 	if status != nil {
-		args = append(args, status)
-		query += fmt.Sprintf(` SET status = $%d`, len(args))
+		args = append(args, *status)
+		query += fmt.Sprintf(` status = $%d`, len(args))
 	}
 	if result != nil {
-		args = append(args, result)
-		query += fmt.Sprintf(` SET result = $%d`, len(args))
+		if len(args) > 0 {
+			query += `,`
+		}
+		args = append(args, *result)
+		query += fmt.Sprintf(` result = $%d`, len(args))
 	}
 	args = append(args, userId, id)
 	query += fmt.Sprintf(` WHERE user_id = $%d AND id = $%d`, len(args)-1, len(args))
