@@ -45,13 +45,14 @@ end
    cookie[("tokens")] -- cookies --> C("client")
    C --> all
    all --> G(["gateway"])
-   O(["orchestrator"]) <-- Calculate --> A1["agent 1"] & A2["agent 2"] & A3["agent n"]
+   O(["orchestrator"]) <-- grpc Calculate --> A1["agent 1"] & A2["agent 2"] & A3["agent n"]
    G <--> orchestrator & auth
    orchestrator <--> O
    auth <--> A(["auth_service"])
    C -- sends tokens --> G
-   A <--> redis[("redis")] & a_db[("postgres")]
-   O <--> o_db[("postgres")]
+   A -- jwt_tokens <--> redis[("redis")] 
+   A -- users <--> a_db[("postgres")]
+   O -- expressions <--> o_db[("postgres")]
 
    n:::elem
    o:::elem
