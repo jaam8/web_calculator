@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	errs "github.com/jaam8/web_calculator/common-lib/errors"
 	"time"
 )
 
@@ -27,10 +28,16 @@ func ParseJWT(tokenStr, jwtSecret string) (string, bool, time.Time, error) {
 		}
 		return []byte(jwtSecret), nil
 	})
-	if err != nil || !token.Valid {
+
+	if err != nil {
+		if err.Error() == "token has invalid claims: token is expired" {
+			return "", false, time.Time{}, errs.ErrTokenExpired
+		}
 		return "", false, time.Time{}, err
 	}
-
+	if !token.Valid {
+		return "", false, time.Time{}, errs.ErrInvalidToken
+	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return "", false, time.Time{}, fmt.Errorf("invalid JWT claims")
