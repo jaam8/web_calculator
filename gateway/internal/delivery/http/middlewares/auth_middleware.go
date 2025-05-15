@@ -13,16 +13,22 @@ import (
 func AuthMiddleware(jwtSecret string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			var accessToken string
 			auth := c.Request().Header.Get("Authorization")
-			if auth == "" {
-				return echo.NewHTTPError(http.StatusUnauthorized, errs.ErrInvalidToken)
-			}
-			parts := strings.SplitN(auth, " ", 2)
-			if len(parts) != 2 || parts[0] != "Bearer" {
-				return echo.NewHTTPError(http.StatusUnauthorized, errs.ErrInvalidToken)
-			}
 
-			accessToken := parts[1]
+			if auth == "Bearer undefined" || auth == "" {
+				authAccessCookie, _ := c.Cookie("access_token")
+				if authAccessCookie == nil {
+					return echo.NewHTTPError(http.StatusUnauthorized, errs.ErrInvalidToken)
+				}
+				accessToken = authAccessCookie.Value
+			} else {
+				parts := strings.SplitN(auth, " ", 2)
+				if len(parts) != 2 || parts[0] != "Bearer" {
+					return echo.NewHTTPError(http.StatusUnauthorized, errs.ErrInvalidToken)
+				}
+				accessToken = parts[1]
+			}
 
 			sub, isRefresh, expTime, err := ParseJwt(accessToken, jwtSecret)
 			if err != nil {
