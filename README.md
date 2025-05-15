@@ -177,5 +177,5 @@ cp .env.example .env
 ---
 Для запуска тестов выполните:
 ```bash
-go test ./...
+make test
 ```
