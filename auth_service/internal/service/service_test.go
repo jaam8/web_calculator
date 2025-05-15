@@ -224,25 +224,33 @@ func TestAuthService_Refresh(t *testing.T) {
 			expectedErr:  errs.ErrInvalidToken,
 		},
 		{
-			name:         "token expired",
-			refreshToken: "expired-token",
-			mockSetup: func(cache *MockCacheAdapter) {
-				cache.On("GetToken", "expired-token", true).
-					Return("", errs.ErrTokenExpired)
-			},
+			name: "token expired",
+			refreshToken: func() string {
+				token, err := utils.GenerateJWT("user123", "secret", true, time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
+				require.NoError(t, err)
+				return token
+			}(),
 			expectedErr: errs.ErrTokenExpired,
 		},
 		{
-			name:         "successful refresh",
-			refreshToken: "valid-token",
+			name: "successful refresh",
+			refreshToken: func() string {
+				token, err := utils.GenerateJWT("user123", "secret", true, time.Minute)
+				require.NoError(t, err)
+				return token
+			}(),
 			mockSetup: func(cache *MockCacheAdapter) {
-				cache.On("GetToken", "valid-token", true).
+				cache.On("GetToken", mock.Anything, true).
 					Return("user123", nil)
 				cache.On("SaveToken", mock.Anything, "user123", false).
 					Return(nil)
 				cache.On("SaveToken", mock.Anything, "user123", true).
 					Return(nil)
+				cache.On("DeleteToken", mock.Anything, true).
+					Return(nil)
 			},
+			expectedErr: nil,
 		},
 	}
 
@@ -265,6 +273,7 @@ func TestAuthService_Refresh(t *testing.T) {
 			if tt.expectedErr != nil {
 				require.Error(t, err)
 				require.Nil(t, resp)
+				require.ErrorIs(t, err, tt.expectedErr)
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, resp)
