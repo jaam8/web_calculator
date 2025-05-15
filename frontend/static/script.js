@@ -2,6 +2,129 @@ let firstExpressionSent = false;
 let expressionsIntervalId = null;
 let resultIntervalId = null;
 
+// Инициализация
+document.addEventListener('DOMContentLoaded', async () => {
+
+    // Инициализация темы
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+    }
+
+    // Инициализация элементов
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('calculateBtn').addEventListener('click', sendExpression);
+    document.getElementById('expression').addEventListener('keydown', handleEnterKey);
+
+    // Загрузка истории
+    await fetchExpressions();
+});
+
+// Обертка для запросов с авторизацией
+async function fetchWithAuth(url, options = {}) {
+    try {
+        const response = await fetch(url, {
+            ...options,
+            credentials: 'include'
+        });
+
+        if (response.status === 401) {
+            const refreshResponse = await fetch('http://localhost:8080/api/v1/refresh-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            if (!refreshResponse.ok) {
+                window.location.href = 'auth/login.html';
+                throw new Error('Token refresh failed');
+            }
+
+            return fetch(url, options);
+        }
+
+        return response;
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
+
+// Обработчик отправки выражения
+async function sendExpression() {
+    const inputField = document.getElementById('expression');
+    const expression = inputField.value.trim();
+
+    if (!expression) {
+        showResultMessage('Введите выражение!', 'error');
+        return;
+    }
+
+    inputField.value = '';
+
+    try {
+        const response = await fetchWithAuth('http://localhost:8080/api/v1/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ expression })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 201) {
+            showResultMessage(`ID: ${data.id}<br>Результат: <span id="status-${data.id}">В процессе</span>`);
+            startPollingResult(data.id);
+            startPollingHistory();
+        } else {
+            showResultMessage(data.error || 'Ошибка вычисления', 'error');
+        }
+    } catch (error) {
+        showResultMessage('Ошибка соединения с сервером', 'error');
+    }
+}
+
+// Показать сообщение с результатом
+function showResultMessage(message, type = 'success') {
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = message;
+    resultDiv.className = type;
+    resultDiv.style.display = 'block';
+}
+
+// Запуск опроса результата
+function startPollingResult(id) {
+    if (resultIntervalId) clearInterval(resultIntervalId);
+    resultIntervalId = setInterval(() => pollExpressionResult(id), 1000);
+}
+
+// Запуск опроса истории
+function startPollingHistory() {
+    if (!firstExpressionSent) {
+        firstExpressionSent = true;
+        if (expressionsIntervalId) clearInterval(expressionsIntervalId);
+        expressionsIntervalId = setInterval(fetchExpressions, 5000);
+    }
+}
+
+// Обработчик Enter
+function handleEnterKey(event) {
+    if (event.key === 'Enter') {
+        sendExpression();
+    }
+}
+
+// Переключение темы
+function toggleTheme() {
+    document.body.classList.toggle('dark-theme');
+    const theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
+}
+
+
 document.getElementById('calculateBtn').addEventListener('click', sendExpression);
 document.getElementById('expression').addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
@@ -19,57 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchExpressions();
 });
 
-async function sendExpression() {
-    const inputField = document.getElementById('expression');
-    const expression = inputField.value.trim();
-    if (!expression) {
-        alert('Введите выражение!');
-        return;
-    }
-    inputField.value = '';
-
-    try {
-        const response = await fetch('http://localhost:8080/api/v1/calculate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ expression })
-        });
-        const data = await response.json();
-
-        console.log('Response from /calculate:', response);
-        console.log('Data from /calculate:', data);
-
-        if (response.status === 201) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = `
-        ID: ${data.id}<br>
-        Результат: <span id="status-${data.id}">В процессе</span>
-      `;
-            resultDiv.style.display = 'block';
-
-            if (resultIntervalId) clearInterval(resultIntervalId);
-            resultIntervalId = setInterval(() => pollExpressionResult(data.id), 1000);
-
-            if (!firstExpressionSent) {
-                firstExpressionSent = true;
-                fetchExpressions();
-                if (expressionsIntervalId) clearInterval(expressionsIntervalId);
-                expressionsIntervalId = setInterval(fetchExpressions, 1000);
-            }
-        } else {
-            document.getElementById('result').innerText = data.message || 'Ошибка';
-            document.getElementById('result').style.display = 'block';
-        }
-    } catch (error) {
-        console.error('Fetch error during expression submission:', error);
-        document.getElementById('result').innerText = 'Ошибка при отправке запроса';
-        document.getElementById('result').style.display = 'block';
-    }
-}
-
 async function fetchExpressions() {
     try {
-        const response = await fetch('http://localhost:8080/api/v1/expressions');
+        const response = await fetchWithAuth(
+            'http://localhost:8080/api/v1/expressions',
+        {
+            method: 'GET',
+            headers: {
+            'Content-Type': 'application/json',
+        },
+            credentials: 'include'
+        }
+        );
         const data = await response.json();
         const historyList = document.getElementById('historyList');
         historyList.innerHTML = "";
@@ -122,13 +206,22 @@ async function fetchExpressions() {
         }
     } catch (error) {
         console.error('Fetch error during expressions fetch:', error);
-        alert('Ошибка при подключении к серверу');
+        // alert('Ошибка при подключении к серверу');
     }
 }
 
 async function pollExpressionResult(id) {
     try {
-        const response = await fetch(`http://localhost:8080/api/v1/expressions/${id}`);
+        const response = await fetchWithAuth(
+            `http://localhost:8080/api/v1/expressions/${id}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
         const data = await response.json();
         console.log('Response from /expressions/{id}:', response);
         console.log('Data from /expressions/{id}:', data);
@@ -136,7 +229,7 @@ async function pollExpressionResult(id) {
         if (response.status === 200) {
             const resultSpan = document.getElementById(`status-${id}`);
             if (resultSpan) {
-                resultSpan.innerText = data.result || 'В процессе';
+                resultSpan.innerText = data.expression.result || 'В процессе';
                 if (data.status === 'done') {
                     clearInterval(resultIntervalId);
                 }
@@ -146,12 +239,6 @@ async function pollExpressionResult(id) {
         }
     } catch (error) {
         console.error('Fetch error during expression result poll:', error);
-        alert('Ошибка при подключении к серверу');
+        // alert('Ошибка при подключении к серверу');
     }
-}
-
-function toggleTheme() {
-    document.body.classList.toggle('dark-theme');
-    const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
-    localStorage.setItem('theme', currentTheme);
 }
