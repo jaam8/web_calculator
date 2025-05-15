@@ -29,14 +29,14 @@ func (s *AuthService) Login(request *auth.LoginRequest) (*auth.LoginResponse, er
 	err := callers.Retry(func() error {
 		response, err := (*s.authAdapter).Login(request)
 		if err != nil {
-			return fmt.Errorf("error in retry Login caller: %v", err)
+			return fmt.Errorf("error in retry Login caller: %w", err)
 		}
 		resultChan <- response
 		return nil
 	}, s.MaxRetries, s.BaseDelay)
 
 	if err != nil {
-		return nil, fmt.Errorf("couldn't call Login: %v", err)
+		return nil, fmt.Errorf("couldn't call Login: %w", err)
 	}
 
 	response := <-resultChan
@@ -51,14 +51,14 @@ func (s *AuthService) Register(request *auth.RegisterRequest) (*auth.RegisterRes
 	err := callers.Retry(func() error {
 		response, err := (*s.authAdapter).Register(request)
 		if err != nil {
-			return fmt.Errorf("error in retry Register caller: %v", err)
+			return fmt.Errorf("error in retry Register caller: %w", err)
 		}
 		resultChan <- response
 		return nil
 	}, s.MaxRetries, s.BaseDelay)
 
 	if err != nil {
-		return nil, fmt.Errorf("couldn't call Register: %v", err)
+		return nil, fmt.Errorf("couldn't call Register: %w", err)
 	}
 
 	response := <-resultChan
@@ -73,14 +73,14 @@ func (s *AuthService) Refresh(request *auth.RefreshRequest) (*auth.RefreshRespon
 	err := callers.Retry(func() error {
 		response, err := (*s.authAdapter).Refresh(request)
 		if err != nil {
-			return fmt.Errorf("error in retry Refresh caller: %v", err)
+			return fmt.Errorf("error in retry Refresh caller: %w", err)
 		}
 		resultChan <- response
 		return nil
 	}, s.MaxRetries, s.BaseDelay)
 
 	if err != nil {
-		return nil, fmt.Errorf("couldn't call Refresh: %v", err)
+		return nil, fmt.Errorf("couldn't call Refresh: %w", err)
 	}
 
 	response := <-resultChan

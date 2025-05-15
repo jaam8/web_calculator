@@ -31,14 +31,14 @@ func (s *OrchestratorService) Calculate(request *orchestrator.CalculateRequest) 
 	err := callers.Retry(func() error {
 		response, err := (*s.orchestratorAdapter).Calculate(request)
 		if err != nil {
-			return fmt.Errorf("error in retry Calculate caller: %v", err)
+			return fmt.Errorf("error in retry Calculate caller: %w", err)
 		}
 		resultChan <- response
 		return nil
 	}, s.MaxRetries, s.BaseDelay)
 
 	if err != nil {
-		return nil, fmt.Errorf("couldn't call Calculate: %v", err)
+		return nil, fmt.Errorf("couldn't call Calculate: %w", err)
 	}
 
 	response := <-resultChan
@@ -53,14 +53,14 @@ func (s *OrchestratorService) Expressions(request *orchestrator.ExpressionsReque
 	err := callers.Retry(func() error {
 		response, err := (*s.orchestratorAdapter).Expressions(request)
 		if err != nil {
-			return fmt.Errorf("error in retry Expressions caller: %v", err)
+			return fmt.Errorf("error in retry Expressions caller: %w", err)
 		}
 		resultChan <- response
 		return nil
 	}, s.MaxRetries, s.BaseDelay)
 
 	if err != nil {
-		return nil, fmt.Errorf("couldn't call Expressions: %v", err)
+		return nil, fmt.Errorf("couldn't call Expressions: %w", err)
 	}
 
 	response := <-resultChan
@@ -75,14 +75,14 @@ func (s *OrchestratorService) ExpressionByID(request *orchestrator.ExpressionByI
 	err := callers.Retry(func() error {
 		response, err := (*s.orchestratorAdapter).ExpressionByID(request)
 		if err != nil {
-			return fmt.Errorf("error in retry ExpressionByID caller: %v", err)
+			return fmt.Errorf("error in retry ExpressionByID caller: %w", err)
 		}
 		resultChan <- response
 		return nil
 	}, s.MaxRetries, s.BaseDelay)
 
 	if err != nil {
-		return nil, fmt.Errorf("couldn't call ExpressionByID: %v", err)
+		return nil, fmt.Errorf("couldn't call ExpressionByID: %w", err)
 	}
 
 	response := <-resultChan
