@@ -193,7 +193,7 @@ func (s *OrchestratorService) ExpressionById(
 	if expression.Result != nil {
 		expr.Result = expression.Result
 	}
-	
+
 	logger.GetLoggerFromCtx(ctx).Info(ctx,
 		"got expression by id",
 		zap.String("ExpressionID", expr.Id),
@@ -217,7 +217,7 @@ func (s *OrchestratorService) ResultTask(
 	taskManager, err := s.expressionManager.GetTaskManager(expressionId)
 	if err != nil {
 		logger.GetLoggerFromCtx(ctx).Debug(ctx,
-			fmt.Sprintf("no task manager found for expression with id: %d", request.ExpressionId),
+			fmt.Sprintf("no task manager found for expression with id: %s", request.ExpressionId),
 			zap.String("expressionID", request.ExpressionId),
 		)
 		return nil, errs.ErrTaskNotFound
