@@ -36,3 +36,20 @@ start-gateway:
 start-frontend:
 	@echo "🚀 Starting frontend..."
 	go run ./frontend/main.go
+
+test_auth:
+	@echo "🧪 Running auth_service tests..."
+	cd auth_service && go test ./internal/service/... -cover
+
+test_orchestrator:
+	@echo "🧪 Running orchestrator tests..."
+	cd orchestrator && go test ./internal/service/... -cover
+
+test_agent:
+	@echo "🧪 Running agent tests..."
+	cd agent && go test ./internal/service/... -cover
+
+.PHONY: test
+test:
+	@echo "🧪 Running all tests..."
+	@$(MAKE) -j 5 test_auth test_orchestrator test_agent
