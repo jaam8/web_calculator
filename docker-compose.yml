@@ -14,6 +14,9 @@ services:
     volumes:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
+    restart: on-failure
+    networks:
+      - app-network
 
   agent:
     build:
@@ -29,6 +32,8 @@ services:
     volumes:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
+    networks:
+      - app-network
 
   orchestrator:
     build:
@@ -44,6 +49,8 @@ services:
     volumes:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
+    networks:
+      - app-network
 
   gateway:
     build:
@@ -61,12 +68,16 @@ services:
     volumes:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
+    networks:
+      - app-network
 
   frontend:
     build:
       context: ./
       dockerfile: frontend/Dockerfile
     container_name: frontend
+    environment:
+      - VITE_API_URL=http://gateway:8080
     env_file:
       - .env
     ports:
@@ -78,6 +89,8 @@ services:
     volumes:
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
+    networks:
+      - app-network
 
   postgres:
     image: postgres:latest
@@ -99,6 +112,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   redis:
     image: redis:latest
@@ -114,9 +129,14 @@ services:
       timeout: 1s
       retries: 3
     restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
   go-mod-cache:
   go-build-cache:
   postgres_data:
   redis_data:
+
+networks:
+  app-network:
