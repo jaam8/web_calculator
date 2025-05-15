@@ -28,12 +28,12 @@ func (s *AgentService) Work(ctx context.Context, waitTime int) {
 		task, err := s.GetTask()
 		for err != nil || task.TaskID == 0 {
 			switch {
-			case errors.As(err, &errs.ErrTaskNotFound):
+			case errors.Is(err, errs.ErrTaskNotFound):
 				logger.GetLoggerFromCtx(ctx).Warn(ctx,
 					"Task not found",
 					zap.Error(err))
 				time.Sleep(sleepTime)
-			case errors.As(err, &errs.ErrInternalServerError):
+			case errors.Is(err, errs.ErrInternalServerError):
 				logger.GetLoggerFromCtx(ctx).Error(ctx,
 					"Internal server error",
 					zap.Int("task_id", task.TaskID),
@@ -62,14 +62,14 @@ func (s *AgentService) Work(ctx context.Context, waitTime int) {
 		result, err := DoTask(task)
 		if err != nil {
 			switch {
-			case errors.As(err, &errs.ErrDivideByZero):
+			case errors.Is(err, errs.ErrDivideByZero):
 				logger.GetLoggerFromCtx(ctx).Error(ctx,
 					"Division by zero error",
 					zap.Int("task_id", task.TaskID),
 					zap.Error(err),
 				)
 				continue
-			case errors.As(err, &errs.ErrInvalidExpression):
+			case errors.Is(err, errs.ErrInvalidExpression):
 				logger.GetLoggerFromCtx(ctx).Error(ctx,
 					"Invalid expression error",
 					zap.Int("task_id", task.TaskID),
@@ -137,7 +137,7 @@ func DoTask(task models.Task) (float64, error) {
 func (s *AgentService) GetTask() (models.Task, error) {
 	task, err := s.orchestratorAdapter.GetTask()
 	if err != nil {
-		if errors.As(err, &errs.ErrTaskNotFound) {
+		if errors.Is(err, errs.ErrTaskNotFound) {
 			return models.Task{TaskID: 0}, err
 		}
 		return models.Task{}, err
@@ -149,7 +149,7 @@ func (s *AgentService) GetTask() (models.Task, error) {
 func (s *AgentService) ResultTask(result models.Result) error {
 	_, err := s.orchestratorAdapter.ResultTask(result.ExpressionID, result.TaskID, result.Result)
 	if err != nil {
-		if errors.As(err, &errs.ErrTaskNotFound) {
+		if errors.Is(err, errs.ErrTaskNotFound) {
 			return err
 		}
 		return err

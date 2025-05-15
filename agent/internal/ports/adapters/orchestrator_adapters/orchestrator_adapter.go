@@ -9,7 +9,6 @@ import (
 	"github.com/jaam8/web_calculator/common-lib/gen/orchestrator"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"log"
 	"time"
 )
 
@@ -39,7 +38,7 @@ func NewOrchestratorAdapter(
 func (o *OrchestratorAdapter) GetGRPCClient() (*grpc.ClientConn, *orchestrator.OrchestratorServiceClient, error) {
 	grpcConn, err := grpc.NewClient(o.Address, o.DialOptions...)
 	if err != nil {
-		return nil, nil, fmt.Errorf("cannot connect to orchestrator by gRPC: %v", err)
+		return nil, nil, fmt.Errorf("cannot connect to orchestrator by gRPC: %w", err)
 	}
 
 	client := orchestrator.NewOrchestratorServiceClient(grpcConn)
@@ -50,7 +49,7 @@ func (o *OrchestratorAdapter) GetGRPCClient() (*grpc.ClientConn, *orchestrator.O
 func (o *OrchestratorAdapter) GetTask() (models.Task, error) {
 	conn, clientPointer, err := o.GetGRPCClient()
 	if err != nil {
-		return models.Task{}, fmt.Errorf("cannot connect to orchestrator by gRPC: %v", err)
+		return models.Task{}, fmt.Errorf("cannot connect to orchestrator by gRPC: %w", err)
 	}
 
 	defer conn.Close() //nolint
@@ -60,15 +59,14 @@ func (o *OrchestratorAdapter) GetTask() (models.Task, error) {
 	err = callers.Timeout(func() error {
 		response, grpcErr := (*clientPointer).GetTask(context.Background(), &emptypb.Empty{})
 		if grpcErr != nil {
-			return fmt.Errorf("error in timeout gRPC caller: %v", grpcErr)
+			return fmt.Errorf("error in timeout gRPC caller: %w", grpcErr)
 		}
 		resultChan <- response.GetTask()
 		return nil
 	}, o.Timeout)
 
 	if err != nil {
-		log.Printf("error in timeout gRPC caller: %v", err)
-		return models.Task{}, fmt.Errorf("couldn't get orchestrator.GetTask gRPC response: %v", err)
+		return models.Task{}, fmt.Errorf("couldn't get orchestrator.GetTask gRPC response: %w", err)
 	}
 
 	responseTask := <-resultChan
@@ -89,7 +87,7 @@ func (o *OrchestratorAdapter) ResultTask(
 ) (string, error) {
 	conn, clientPointer, err := o.GetGRPCClient()
 	if err != nil {
-		return "", fmt.Errorf("cannot connect to orchestrator by gRPC: %v", err)
+		return "", fmt.Errorf("cannot connect to orchestrator by gRPC: %w", err)
 	}
 	defer conn.Close() //nolint
 
@@ -103,20 +101,19 @@ func (o *OrchestratorAdapter) ResultTask(
 			}
 			response, grpcErr := (*clientPointer).ResultTask(context.Background(), request)
 			if grpcErr != nil {
-				return fmt.Errorf("error in timeout gRPC caller: %v", grpcErr)
+				return fmt.Errorf("error in timeout gRPC caller: %w", grpcErr)
 			}
 			resultChan <- response.GetStatus()
 			return nil
 		}, o.Timeout)
 		if err != nil {
-			return fmt.Errorf("error in retry gRPC caller: %v", err)
+			return fmt.Errorf("error in retry gRPC caller: %w", err)
 		}
 		return nil
 	}, o.MaxRetries, o.BaseRetryDelay)
 
 	if err != nil {
-		log.Printf("error in timeout gRPC caller: %v", err)
-		return "", fmt.Errorf("couldn't get orchestrator.ResultTaskRequest gRPC response: %v", err)
+		return "", fmt.Errorf("couldn't get orchestrator.ResultTaskRequest gRPC response: %w", err)
 	}
 
 	status := <-resultChan
