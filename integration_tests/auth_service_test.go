@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type testServices struct {
+type testAuthServices struct {
 	pgContainer          tc.Container
 	redisContainer       tc.Container
 	authServiceContainer tc.Container
@@ -33,7 +33,7 @@ type testServices struct {
 	cancel context.CancelFunc
 }
 
-func setupTestServices(t *testing.T) *testServices {
+func setupTestServices(t *testing.T) *testAuthServices {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -88,26 +88,7 @@ func setupTestServices(t *testing.T) *testServices {
 				wait.ForListeningPort("50051/tcp"),
 				wait.ForLog("AUTH_SERVICE listening at :50051"),
 			).WithDeadline(120 * time.Second),
-			Env: map[string]string{
-				"POSTGRES_HOST":     "postgres",
-				"POSTGRES_PORT":     "5432",
-				"POSTGRES_USER":     "postgres",
-				"POSTGRES_PASSWORD": "1234",
-				"POSTGRES_DB":       "web_calculator",
-				"MIGRATION_PATH":    "file:///db/migrations",
-
-				"REDIS_HOST":            "redis",
-				"REDIS_PORT":            "6379",
-				"AUTH_SERVICE_REDIS_DB": "0",
-
-				"JWT_SECRET": "test_secret",
-				"LOG_LEVEL":  "debug",
-
-				"AUTH_SERVICE_PORT":             "50051",
-				"AUTH_SERVICE_TIMEOUT_MS":       "3000",
-				"AUTH_SERVICE_MAX_RETRIES":      "3",
-				"AUTH_SERVICE_BASE_RETRY_DELAY": "2000",
-			},
+			// env vars taken from .env file
 		},
 	})
 	require.NoError(t, err)
@@ -132,7 +113,7 @@ func setupTestServices(t *testing.T) *testServices {
 
 	authClient := auth_service.NewAuthServiceClient(conn)
 
-	return &testServices{
+	return &testAuthServices{
 		pgContainer:          pgContainer,
 		redisContainer:       redisContainer,
 		authServiceContainer: authServiceContainer,
@@ -143,7 +124,7 @@ func setupTestServices(t *testing.T) *testServices {
 	}
 }
 
-func (ts *testServices) cleanup(t *testing.T) {
+func (ts *testAuthServices) cleanup(t *testing.T) {
 	t.Helper()
 
 	if ts.authServiceContainer != nil {
