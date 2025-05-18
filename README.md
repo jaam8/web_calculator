@@ -4,19 +4,20 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/jaam8/web_calculator)](https://goreportcard.com/report/github.com/jaam8/web_calculator)
 [![wakatime](https://wakatime.com/badge/user/018badf6-44ca-4a0f-82e9-9b27db08764a/project/2fbf499e-2c9f-47af-aa8f-c602090518fe.svg)](https://wakatime.com/badge/user/018badf6-44ca-4a0f-82e9-9b27db08764a/project/2fbf499e-2c9f-47af-aa8f-c602090518fe)
 
-### Если вы видите эту надпись, то я еще доделываю :) Буду очень благодарна если проверите мой проект завтра. мой тг @jaam96
-
 ## Описание
 
 ---
 Этот проект реализует веб-сервис, который распределенно вычисляет арифметические выражения, переданные пользователем через HTTP-запрос.
 Сервис поддерживает:
 
+- Регистрацию и аутентификацию пользователей с использованием JWT-токенов.
+
 - Вычисление арифметических выражений с операторами: `+`, `-`, `*`, `/`, `(`, `)`
 
 - Обработку ошибок, если выражение некорректно или произошла внутренняя ошибка сервиса.
 
-## Примеры и эндпоинты [localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+## Примеры и эндпоинты 
+Запустите проект и  перейдите на [localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
 
 ## Схема работы
 
@@ -105,23 +106,24 @@ end
 git clone https://github.com/jaam8/web_calculator.git
 cd web_calculator
 ```
-### 2. Установите зависимости:
-```bash
-go mod tidy
-```
 
-### 3. Cкопируйте и по желанию измените файл `.env`:
+### 2. Cкопируйте и по желанию измените файл `.env`:
 **в `.env.example` уже указаны значения по умолчанию**
 ```bash
 cp .env.example .env
 ```
 
-### 4. Запуск проекта:
+### 3. Запуск проекта:
 - Запуск с помощью `docker-compose`:
    ```bash
    docker-compose up -d
    ```
 - Обычный запуск:
+Установите зависимости для каждого сервиса:
+    ```bash
+    go mod tidy
+    ```
+    Запустите проект командой:
    ```bash
   make run
   ```
@@ -179,4 +181,10 @@ cp .env.example .env
 Для запуска тестов выполните:
 ```bash
 make test
+```
+
+Для запуска интеграционных тестов выполните:
+```bash
+cd integration_tests
+go test ./...
 ```
