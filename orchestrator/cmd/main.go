@@ -42,6 +42,11 @@ func main() {
 		log.Fatalf("failed to create postgres client: %v", err)
 	}
 
+	err = postgres.Migrate(ctx, postgresCfg, cfg.MigrationPath)
+	if err != nil {
+		log.Fatalf("failed to migrate postgres: %v", err)
+	}
+
 	postgresAdapter := storage.NewPostgresAdapter(PostgresClient)
 
 	Server := server.NewOrchestratorService(postgresAdapter, expressionManager)

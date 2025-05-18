@@ -18,9 +18,10 @@ type OrchestratorConfig struct {
 }
 
 type Config struct {
-	Orchestrator OrchestratorConfig `yaml:"orchestrator" env-prefix:"ORCHESTRATOR_"`
-	Postgres     postgres.Config    `yaml:"postgres" env-prefix:"POSTGRES_"`
-	LogLevel     string             `yaml:"log_level" env:"LOG_LEVEL" env-default:"info"`
+	Orchestrator  OrchestratorConfig `yaml:"orchestrator" env-prefix:"ORCHESTRATOR_"`
+	Postgres      postgres.Config    `yaml:"postgres" env-prefix:"POSTGRES_"`
+	LogLevel      string             `yaml:"log_level" env:"LOG_LEVEL" env-default:"info"`
+	MigrationPath string             `yaml:"migration_path" env:"MIGRATION_PATH" env-default:"file:///db/migrations"`
 }
 
 func New() (Config, error) {
